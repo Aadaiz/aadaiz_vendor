@@ -68,7 +68,7 @@ class TailorOrderController extends GetxController {
         }
       } catch (e) {
         print('Error uploading image ${i + 1}: $e');
-        Get.snackbar("Error", "Failed to upload image ${i + 1}: $e");
+
         return [];
       } finally {
         kycLoading(false);
@@ -162,7 +162,7 @@ class TailorOrderController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       _getRefreshController(type).refreshFailed();
       return;
     }
@@ -241,7 +241,7 @@ class TailorOrderController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
@@ -282,11 +282,11 @@ class TailorOrderController extends GetxController {
     }
 
       } else {
-        Get.snackbar("Error", response.message ?? "Failed to update product.");
+
       }
     } catch (e) {
       print("Error updating product: $e");
-      Get.snackbar("Error", "An error occurred while updating product: $e");
+
     } finally {
       isLoadingStatusById[id] = false; // Clear loading for this order ID
       isLoadingStatusById.refresh();

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:aadaiz_seller/src/features/seller/ui/dashboard/controller/sellerdash_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -39,7 +41,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         centerTitle: true,
-
         title: Text(
           'Dashboard',
           style: GoogleFonts.dmSans(
@@ -50,8 +51,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       body: Obx(
-        () => SellerdashController.to.isLoading.value
-            ? Utils.shimmer(lenght: 5)
+        () => SellerDashController.to.isLoading.value
+            ? Utils.shimmer(lenght: 15)
             : SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -73,11 +74,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   height: screenHeight * 0.1,
                                   title: 'Revenue',
                                   percentage: '',
-                                  amount: SellerdashController
+                                  amount: SellerDashController
                                       .to
-                                      .dashdata
+                                      .dashData
                                       .value
-                                      .lastMonthRevenue,
+                                      .revenue,
                                 ),
                               ),
                             ),
@@ -93,11 +94,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   height: screenHeight * 0.1,
                                   title: 'Product Sold',
                                   percentage: '',
-                                  amount: SellerdashController
+                                  amount: SellerDashController
                                       .to
-                                      .dashdata
+                                      .dashData
                                       .value
-                                      .lastMonthProductSold,
+                                      .productSold,
                                 ),
                               ),
                             ),
@@ -113,11 +114,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   height: screenHeight * 0.1,
                                   title: 'Customer Count',
                                   percentage: '',
-                                  amount: SellerdashController
+                                  amount: SellerDashController
                                       .to
-                                      .dashdata
+                                      .dashData
                                       .value
-                                      .lastMonthCustomersCount,
+                                      .customer,
                                 ),
                               ),
                             ),
@@ -288,31 +289,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<TableRow> getTopProductsRows() {
-    final data = SellerdashController.to.dashdata.value;
-    if (data == null) return [];
+    final data = SellerDashController.to.dashData.value;
+    if (data.status == null) return [];
 
-    final selectedPeriod = SellerdashController.to.selectedPeriod.value;
-    List<ThisProductsSold>? products;
-    switch (selectedPeriod) {
-      case 'Last Week':
-        products = data.thisWeekProductsSold;
-        break;
-      case 'This Month':
-        products = data.thisMonthProductsSold;
-        break;
-      case 'This Year':
-        products = data.thisYearProductsSold;
-        break;
-      default:
-        products = [];
-    }
+    final selectedPeriod = SellerDashController.to.selectedPeriod.value;
+    List<TopProducts>? products = data.topProducts;
 
     if (products == null || products.isEmpty) return [];
 
     return products.asMap().entries.map((entry) {
       final index = entry.key + 1;
       final product = entry.value.product;
-      final totalSold = entry.value.totalSold ?? 0;
+      final totalSold = entry.value.totalUnitsSold ?? 0;
       return TableRow(
         children: [
           Padding(
@@ -326,19 +314,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: Image.network(
-                    product!.image!,
+                    product?.image ?? '',
                     width: Get.width * 0.09,
-                    height: Get.height*0.04,
+                    height: Get.height * 0.04,
                     fit: BoxFit.cover,
                   ),
                 ),
                 SizedBox(width: 5),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${product?.category!.capitalizeFirst! ?? 'Unknown'}',
+                      product?.title?.capitalizeFirst ?? 'Unknown',
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w500,
                         color: AppColors.blackColor,
@@ -346,12 +333,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     SizedBox(height: 4),
-                    Text(
-                      '${product?.color!.capitalizeFirst! ?? 'Unknown'}',
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.greyTextColor,
-                        fontSize: 10,
+                    Container(
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        color: _parseColor(product!.color!),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.grey),
                       ),
                     ),
                   ],
@@ -388,6 +376,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
     }).toList();
+  }
+
+  Color _parseColor(String hexColor) {
+    hexColor = hexColor.replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return Color(int.parse(hexColor, radix: 16));
   }
 }
 
@@ -448,7 +444,7 @@ class EarningStatistics extends StatelessWidget {
                     primaryYAxis: NumericAxis(
                       minimum: 0,
                       maximum: getMaxValue(
-                        SellerdashController.to.selectedPeriod.value,
+                        SellerDashController.to.selectedPeriod.value,
                       ),
                       interval: 50,
                       labelStyle: GoogleFonts.dmSans(
@@ -473,7 +469,7 @@ class EarningStatistics extends StatelessWidget {
                     series: <CartesianSeries<ChartData, String>>[
                       ColumnSeries<ChartData, String>(
                         dataSource: getChartData(
-                          SellerdashController.to.selectedPeriod.value,
+                          SellerDashController.to.selectedPeriod.value,
                         ),
                         xValueMapper: (ChartData data, _) => data.day,
                         yValueMapper: (ChartData data, _) => data.earnings,
@@ -538,95 +534,29 @@ class EarningStatistics extends StatelessWidget {
   }
 
   double getMaxValue(String period) {
-    final data = SellerdashController.to.dashdata.value;
-    if (data == null) return 100.0;
+    final data = SellerDashController.to.dashData.value;
+    if (data.status == null) return 100.0;
 
-    switch (period) {
-      case 'Last Week':
-        final dailySales = data.dailySales;
-        if (dailySales == null) return 100.0;
-        return [
-              dailySales.mon ?? 0,
-              dailySales.tue ?? 0,
-              dailySales.wed ?? 0,
-              dailySales.thu ?? 0,
-              dailySales.fri ?? 0,
-              dailySales.sat ?? 0,
-              dailySales.sun ?? 0,
-            ].reduce((a, b) => a > b ? a : b).toDouble() +
-            50;
+    final salesChart = data.salesChart;
+    if (salesChart == null || salesChart.isEmpty) return 100.0;
 
-      case 'This Month':
-        final weeklySales = data.weeklySales;
-        if (weeklySales == null) return 100.0;
-        return [
-              weeklySales.week1 ?? 0,
-              weeklySales.week2 ?? 0,
-              weeklySales.week3 ?? 0,
-              weeklySales.week4 ?? 0,
-            ].reduce((a, b) => a > b ? a : b).toDouble() +
-            50;
-
-      case 'This Year':
-        final monthlySales = data.monthlySales;
-        if (monthlySales == null) return 100.0;
-        return monthlySales.values.reduce((a, b) => a > b ? a : b).toDouble() +
-            50;
-
-      default:
-        return 100.0;
-    }
+    final maxValue = salesChart
+        .map((e) => e.totalSales ?? 0)
+        .reduce((a, b) => a > b ? a : b)
+        .toDouble();
+    return maxValue + 50;
   }
 
   List<ChartData> getChartData(String period) {
-    final data = SellerdashController.to.dashdata.value;
-    if (data == null) return [];
+    final data = SellerDashController.to.dashData.value;
+    if (data.status == null) return [];
 
-    switch (period) {
-      case 'Last Week':
-        final dailySales = data.dailySales;
-        if (dailySales == null) return [];
-        return [
-          ChartData('Mon', (dailySales.mon ?? 0).toDouble()),
-          ChartData('Tue', (dailySales.tue ?? 0).toDouble()),
-          ChartData('Wed', (dailySales.wed ?? 0).toDouble()),
-          ChartData('Thu', (dailySales.thu ?? 0).toDouble()),
-          ChartData('Fri', (dailySales.fri ?? 0).toDouble()),
-          ChartData('Sat', (dailySales.sat ?? 0).toDouble()),
-          ChartData('Sun', (dailySales.sun ?? 0).toDouble()),
-        ];
+    final salesChart = data.salesChart;
+    if (salesChart == null || salesChart.isEmpty) return [];
 
-      case 'This Month':
-        final weeklySales = data.weeklySales;
-        if (weeklySales == null) return [];
-        return [
-          ChartData('Week1', (weeklySales.week1 ?? 0).toDouble()),
-          ChartData('Week2', (weeklySales.week2 ?? 0).toDouble()),
-          ChartData('Week3', (weeklySales.week3 ?? 0).toDouble()),
-          ChartData('Week4', (weeklySales.week4 ?? 0).toDouble()),
-        ];
-
-      case 'This Year':
-        final monthlySales = data.monthlySales;
-        if (monthlySales == null) return [];
-        return [
-          ChartData('Jan', (monthlySales['Jan'] ?? 0).toDouble()),
-          ChartData('Feb', (monthlySales['Feb'] ?? 0).toDouble()),
-          ChartData('Mar', (monthlySales['Mar'] ?? 0).toDouble()),
-          ChartData('Apr', (monthlySales['Apr'] ?? 0).toDouble()),
-          ChartData('May', (monthlySales['May'] ?? 0).toDouble()),
-          ChartData('Jun', (monthlySales['Jun'] ?? 0).toDouble()),
-          ChartData('Jul', (monthlySales['Jul'] ?? 0).toDouble()),
-          ChartData('Aug', (monthlySales['Aug'] ?? 0).toDouble()),
-          ChartData('Sep', (monthlySales['Sep'] ?? 0).toDouble()),
-          ChartData('Oct', (monthlySales['Oct'] ?? 0).toDouble()),
-          ChartData('Nov', (monthlySales['Nov'] ?? 0).toDouble()),
-          ChartData('Dec', (monthlySales['Dec'] ?? 0).toDouble()),
-        ];
-
-      default:
-        return [];
-    }
+    return salesChart.map((item) {
+      return ChartData(item.label ?? '', (item.totalSales ?? 0).toDouble());
+    }).toList();
   }
 
   String formatEarnings(double value) {
@@ -655,8 +585,8 @@ class CustomDropdownButton extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: SellerdashController.to.selectedPeriod.value,
-              items: <String>['Last Week', 'This Month', 'This Year'].map((
+              value: SellerDashController.to.selectedPeriod.value,
+              items: <String>['This Week', 'This Month', 'This Year'].map((
                 String value,
               ) {
                 return DropdownMenuItem<String>(
@@ -666,7 +596,20 @@ class CustomDropdownButton extends StatelessWidget {
               }).toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
-                  SellerdashController.to.selectedPeriod.value = newValue;
+                  SellerDashController.to.selectedPeriod.value = newValue;
+
+                  String value = newValue.trim().toLowerCase().replaceAll(' ', '');
+
+                  SellerDashController.to.getDashData(
+                    filter: value == 'thisweek'
+                        ? 'this_week'
+                        : value == 'thismonth'
+                        ? 'this_month'
+                        : 'this_year',
+                  );
+
+                  log('New Value: $newValue');
+                  log('trimWithLowerCase: ${newValue.trim().toLowerCase()}');
                 }
               },
               icon: Icon(

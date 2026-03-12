@@ -1,37 +1,26 @@
 import 'dart:convert';
 
+ProfileRes profileResFromJson(String str) =>
+    ProfileRes.fromMap(json.decode(str));
+
 class ProfileRes {
-  bool? success;
+  bool? status;
   String? message;
   Data? data;
 
-  ProfileRes({
-    this.success,
-    this.message,
-    this.data,
-  });
-
-  factory ProfileRes.fromJson(String str) => ProfileRes.fromMap(json.decode(str));
-
-  String toJson() => json.encode(toMap());
+  ProfileRes({this.status, this.message, this.data});
 
   factory ProfileRes.fromMap(Map<String, dynamic> json) => ProfileRes(
-    success: json["success"],
+    status: json["status"] ?? json["stauts"], // API typo fix
     message: json["message"],
     data: json["data"] == null ? null : Data.fromMap(json["data"]),
   );
-
-  Map<String, dynamic> toMap() => {
-    "success": success,
-    "message": message,
-    "data": data?.toMap(),
-  };
 }
 
 class Data {
   int? id;
   String? accountType;
-  dynamic email;
+  String? email;
   String? mobileNumber;
   String? shopName;
   String? shopPhoto;
@@ -44,13 +33,12 @@ class Data {
   String? panCard;
   String? gstNumber;
   String? productCategory;
-  dynamic otherProduct;
-  int? accountNumber;
-  int? confirmAccountNumber;
+  String? otherProduct;
+  String? bankName;
+  String? accountNumber;
+  String? confirmAccountNumber;
   String? ifscCode;
-  DateTime? createdAt;
-  DateTime? updatedAt;
-  dynamic deletedAt;
+  int? isVerify;
 
   Data({
     this.id,
@@ -69,17 +57,12 @@ class Data {
     this.gstNumber,
     this.productCategory,
     this.otherProduct,
+    this.bankName,
     this.accountNumber,
     this.confirmAccountNumber,
     this.ifscCode,
-    this.createdAt,
-    this.updatedAt,
-    this.deletedAt,
+    this.isVerify,
   });
-
-  factory Data.fromJson(String str) => Data.fromMap(json.decode(str));
-
-  String toJson() => json.encode(toMap());
 
   factory Data.fromMap(Map<String, dynamic> json) => Data(
     id: json["id"],
@@ -98,36 +81,10 @@ class Data {
     gstNumber: json["gst_number"],
     productCategory: json["product_category"],
     otherProduct: json["other_product"],
+    bankName: json["bank_name"],
     accountNumber: json["account_number"],
     confirmAccountNumber: json["confirm_account_number"],
     ifscCode: json["ifsc_code"],
-    createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
-    updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
-    deletedAt: json["deleted_at"],
+    isVerify: json["is_verify"],
   );
-
-  Map<String, dynamic> toMap() => {
-    "id": id,
-    "account_type": accountType,
-    "email": email,
-    "mobile_number": mobileNumber,
-    "shop_name": shopName,
-    "shop_photo": shopPhoto,
-    "street": street,
-    "city": city,
-    "state": state,
-    "pincode": pincode,
-    "landmark": landmark,
-    "aadhaar_card": aadhaarCard,
-    "pan_card": panCard,
-    "gst_number": gstNumber,
-    "product_category": productCategory,
-    "other_product": otherProduct,
-    "account_number": accountNumber,
-    "confirm_account_number": confirmAccountNumber,
-    "ifsc_code": ifscCode,
-    "created_at": createdAt?.toIso8601String(),
-    "updated_at": updatedAt?.toIso8601String(),
-    "deleted_at": deletedAt,
-  };
 }

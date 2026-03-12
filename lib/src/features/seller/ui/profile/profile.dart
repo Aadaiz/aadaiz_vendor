@@ -16,7 +16,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../res/colors/app_colors.dart';
 import '../../../auth/ui/login/login.dart';
+import '../../../designer/controller/designer_controller.dart';
 import '../../../tailor/ui/kyc/category_screen.dart';
+import 'edit_bank_details.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key, this.isTailor = false});
@@ -30,25 +32,22 @@ class _ProfileState extends State<Profile> {
   final FocusNode _focusNode = FocusNode();
   @override
   void dispose() {
-    _focusNode.dispose(); // Dispose of the FocusNode
+    _focusNode.dispose();
     super.dispose();
   }
+  bool isEditName =false;
+
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
-    if (ProfileController.to.enable == true) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        FocusScope.of(context).requestFocus(_focusNode);
-      });
-    }
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
         leading: Padding(
           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.013),
           child: InkWell(
-
             onTap: () {
               HomeController.to.setTab(0);
             },
@@ -64,20 +63,32 @@ class _ProfileState extends State<Profile> {
         actions: [
           GestureDetector(
             onTap: () {
-              // if (!DesignerController.to.updateLoading.value) {
+              _focusNode.unfocus();
+
+
               ProfileController.to.UpdateProfile();
-              // }
+
+              setState(() {
+                isEditName=false;
+              });
             },
-            child: Obx(()=>
-               Padding(
+            child: Obx(
+              () => Padding(
                 padding: const EdgeInsets.all(16),
-                child:ProfileController.to.isLoadingupdate.value?SizedBox(width: 15,height: 15, child: CircularProgressIndicator(strokeWidth: 2,color: AppColors.primaryColor,)) :Icon(
-                  Icons.check,
-                  color:
-                      AppColors.primaryColor
-                      ,
-                  size: 30,
-                ),
+                child: ProfileController.to.isLoadingupdate.value
+                    ? SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryColor,
+                        ),
+                      )
+                    :  (ProfileController.to.tempImage.value != null || isEditName==true)? Icon(
+                        Icons.check,
+                        color: AppColors.primaryColor,
+                        size: 30,
+                      ):SizedBox.shrink(),
               ),
             ),
           ),
@@ -102,30 +113,68 @@ class _ProfileState extends State<Profile> {
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: Colors.grey.withAlpha(5),
+                          backgroundColor: Colors.grey.withAlpha(20),
                           child: ClipOval(
-                            child: Obx(
-                              () => ProfileController.to.tempImage.value != null
-                                  ? Image.file(
-                                      ProfileController.to.tempImage.value!,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : CachedNetworkImage(
-                                imageUrl: ProfileController.to.profiledetail.isNotEmpty
-                                    ? ProfileController.to.profiledetail.first.shopPhoto ?? ''
-                                    : '',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const CircularProgressIndicator(),
-                                errorWidget: (context, url, error) => const Icon(Icons.error),
-                              ),
+                            child: Obx(() {
+                              final controller = ProfileController.to;
 
-                            ),
+                              String imageUrl = controller.profiledetail.isNotEmpty
+                                  ? (controller.profiledetail.first.shopPhoto ?? '')
+                                  : '';
+
+                              String name = controller.profiledetail.isNotEmpty
+                                  ? (controller.profiledetail.first.shopName ?? '')
+                                  : '';
+
+                              String initials = name.isNotEmpty
+                                  ? name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                                  : '';
+
+
+                              if (controller.tempImage.value != null) {
+                                return Image.file(
+                                  controller.tempImage.value!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                );
+                              }
+
+
+                              if (imageUrl.isNotEmpty) {
+                                return CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                  const CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) => Center(
+                                    child: Text(
+                                      initials,
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+
+
+                              return Center(
+                                child: Text(
+                                  initials,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }),
                           ),
                         ),
+
                         Positioned(
                           bottom: 0,
                           right: 0,
@@ -134,16 +183,12 @@ class _ProfileState extends State<Profile> {
                             radius: 12,
                             child: InkWell(
                               onTap: () async {
-                                final pickedFile = await ImagePicker()
-                                    .pickImage(source: ImageSource.gallery);
+                                final pickedFile =
+                                await ImagePicker().pickImage(source: ImageSource.gallery);
+
                                 if (pickedFile != null) {
-                                  ProfileController.to.tempImage.value = File(
-                                    pickedFile.path,
-                                  );
-                                  HomeController.to.selectedImages.add(
-                                    pickedFile,
-                                  );
-                                  setState(() {});
+                                  ProfileController.to.tempImage.value = File(pickedFile.path);
+                                  HomeController.to.selectedImages.add(pickedFile);
                                 }
                               },
                               child: Image.asset('assets/images/eid.png'),
@@ -155,7 +200,8 @@ class _ProfileState extends State<Profile> {
                     const SizedBox(height: 10),
                     Text(
                       ProfileController.to.profiledetail.isNotEmpty
-                          ? ProfileController.to.profiledetail.first.shopName ?? 'No Shop Name'
+                          ? ProfileController.to.profiledetail.first.shopName ??
+                                'No Shop Name'
                           : 'No Shop Name',
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w400,
@@ -216,22 +262,37 @@ class _ProfileState extends State<Profile> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: TextField(
-                        focusNode: _focusNode,
+                        onChanged: (value){
+                          setState(() {
+                            isEditName=true;
+                          });
+                        },
+                         focusNode: _focusNode,
                         cursorColor: AppColors.greyTextColor.withAlpha(50),
-                        readOnly: ProfileController.to.enable == true ? false : true,
+                        readOnly: ProfileController.to.enable == true
+                            ? false
+                            : true,
                         controller: ProfileController.to.shopname
                           ..text = ProfileController.to.shopname.text.isEmpty
                               ? (ProfileController.to.profiledetail.isNotEmpty
-                              ? ProfileController.to.profiledetail.first.shopName ?? ''
-                              : '')
+                                    ? ProfileController
+                                              .to
+                                              .profiledetail
+                                              .first
+                                              .shopName ??
+                                          ''
+                                    : '')
                               : ProfileController.to.shopname.text,
-
 
                         decoration: InputDecoration(
                           suffixIcon: InkWell(
                             onTap: () {
                               setState(() {
                                 ProfileController.to.enable = true;
+                              });
+
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                _focusNode.requestFocus();
                               });
                             },
                             child: Padding(
@@ -278,6 +339,15 @@ class _ProfileState extends State<Profile> {
                         leading: Icons.history,
                         trailing: Icons.arrow_forward_ios,
                         title: 'Payment History',
+                      ),
+                    ), InkWell(
+                      onTap: () {
+                        Get.to(() =>  BankEdit(data:ProfileController.to.profiledetail.first));
+                      },
+                      child: textWidget(
+                        leading: Icons.comment_bank,
+                        trailing: Icons.arrow_forward_ios,
+                        title: 'Bank Details',
                       ),
                     ),
                     InkWell(

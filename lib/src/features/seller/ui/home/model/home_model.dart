@@ -1,7 +1,7 @@
 class ProductResponse {
   final bool success;
   final String message;
-  final Pagination data; // Updated to use Pagination instead of dynamic
+  final Pagination data;
 
   ProductResponse({
     required this.success,
@@ -32,10 +32,11 @@ class Product {
   final String updatedAt;
   final String createdAt;
   final int id;
-  final dynamic rating; // Added nullable field
-  final dynamic? status; // Added nullable field
-  final dynamic? peopleView; // Added nullable field
-  final dynamic stockStatus; // Added nullable field
+  final dynamic rating;
+  final dynamic? status;
+  final dynamic? peopleView;
+  final dynamic stockStatus;
+  final Coupon? coupon;
 
   Product({
     required this.sellerId,
@@ -55,6 +56,7 @@ class Product {
     this.status,
     this.peopleView,
     this.stockStatus,
+    this.coupon,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -73,10 +75,79 @@ class Product {
       createdAt: json['created_at'] as String,
       id: json['id'] as int,
       rating: json['rating'],
-      status: json['status'] ,
+      status: json['status'],
       peopleView: json['people_view'] as int?,
       stockStatus: json['stock_status'] as String?,
+      coupon: json['coupon'] != null ? Coupon.fromJson(json['coupon']) : null,
     );
+  }
+}
+
+class Coupon {
+  final int id;
+  final int materialId;
+  final int sellerId;
+  final String title;
+  final String description;
+  final String? imageUrl;
+  final String couponCode;
+  final String couponType;
+  final String discount;
+  final String validFrom;
+  final String validTo;
+  final String createdAt;
+  final String updatedAt;
+
+  Coupon({
+    required this.id,
+    required this.materialId,
+    required this.sellerId,
+    required this.title,
+    required this.description,
+    this.imageUrl,
+    required this.couponCode,
+    required this.couponType,
+    required this.discount,
+    required this.validFrom,
+    required this.validTo,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Coupon.fromJson(Map<String, dynamic> json) {
+    return Coupon(
+      id: json['id'] as int,
+      materialId: json['material_id'] as int,
+      sellerId: json['seller_id'] as int,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      imageUrl: json['image_url'] as String?,
+      couponCode: json['coupon_code'] as String,
+      couponType: json['coupon_type'] as String,
+      discount: json['discount'] as String,
+      validFrom: json['valid_from'] as String,
+      validTo: json['valid_to'] as String,
+      createdAt: json['created_at'] as String,
+      updatedAt: json['updated_at'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'material_id': materialId,
+      'seller_id': sellerId,
+      'title': title,
+      'description': description,
+      'image_url': imageUrl,
+      'coupon_code': couponCode,
+      'coupon_type': couponType,
+      'discount': discount,
+      'valid_from': validFrom,
+      'valid_to': validTo,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+    };
   }
 }
 

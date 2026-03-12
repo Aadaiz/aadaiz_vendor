@@ -16,6 +16,7 @@ class Selling extends StatefulWidget {
 }
 
 class _SellingState extends State<Selling> {
+
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
@@ -51,9 +52,5 @@ class _SellingState extends State<Selling> {
         ),
     );
   }
-  @override
-  void dispose() {
-    // HomeController.to.refreshController.dispose();
-    super.dispose();
-  }
+
 }

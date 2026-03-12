@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:aadaiz_seller/src/features/seller/ui/home/model/home_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart'
@@ -147,17 +149,15 @@ class ProductCard extends StatelessWidget {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    data.color,
-                                    style: GoogleFonts.dmSans(
-                                      textStyle: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.greyTextColor,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: _parseColor(data.color),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.grey),
                                   ),
+
                                 ),
                               ],
                             ),
@@ -226,4 +226,17 @@ void addCatalogueBottomSheet(BuildContext context, {Product? product}) {
       return AddCatalogue(product: product);
     },
   );
+
+}
+Color _parseColor(String hexColor) {
+  hexColor = hexColor.replaceAll('#', '');
+  log(hexColor);
+  if (hexColor.length == 6) {
+    hexColor = 'FF' + hexColor;
+    log(hexColor);
+  }
+ var color=Color(int.parse(hexColor, radix: 16));
+  log(color.toString());
+  return color;
+
 }

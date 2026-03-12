@@ -5,10 +5,12 @@ import 'package:aadaiz_seller/src/res/colors/app_colors.dart';
 import 'package:aadaiz_seller/src/res/components/common_button.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../res/components/common_toast.dart';
 import '../home/model/home_model.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -25,37 +27,53 @@ class AddCatalogue extends StatefulWidget {
 }
 
 class _AddCatalogueState extends State<AddCatalogue> {
+  HomeController controller = Get.find<HomeController>();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _selectedQuantity = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  String? _selectedCategory;
+  final TextEditingController _coupon = TextEditingController();
+  final TextEditingController _hsnCode = TextEditingController();
+  final TextEditingController _selectedCategory = TextEditingController();
+  final TextEditingController _selectedSubCategory = TextEditingController();
+  final TextEditingController _couponTitleController = TextEditingController();
+  final TextEditingController _couponDescriptionController = TextEditingController();
+  final TextEditingController _couponDiscountController = TextEditingController();
+  final TextEditingController _couponValidFromController = TextEditingController();
+  final TextEditingController _couponValidToController = TextEditingController();
+
   String? _selectedColor;
-  String? _selectedQuantity;
-  List<String> _existingImageUrls = []; // Track existing image URLs for editing
+  String? _selectedCouponType;
+  bool _showCouponFields = false;
+
+  List<String> _existingImageUrls = [];
 
   @override
   void initState() {
     super.initState();
     AuthController.to.getCategory();
-    HomeController.to.selectedImages.clear(); // Clear previous images
-    // Pre-fill fields if editing
+    HomeController.to.selectedImages.clear();
     if (widget.product != null) {
       _priceController.text = widget.product!.price;
       _descriptionController.text = widget.product!.description ?? '';
-      _selectedCategory = widget.product!.category;
-      // Normalize color to match dropdown values (e.g., 'red' -> 'Red')
-      final List<dynamic> colorList = ['Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Purple', 'Pink', 'Brown', 'Black', 'White'];
-      _selectedColor = colorList.firstWhere(
-            (color) => color.toLowerCase() == widget.product!.color.toLowerCase(),
-        orElse: () => null,
-      );
-      _selectedQuantity = widget.product!.meter;
-      // Load existing image URLs
+      _selectedCategory.text = widget.product!.category;
+      _selectedColor = widget.product!.color;
+      _selectedQuantity.text = widget.product!.meter;
       _existingImageUrls = widget.product!.image
           .split(',')
           .map((url) => url.trim())
           .where((url) => url.isNotEmpty)
           .take(3)
           .toList();
+      if (widget.product!.coupon != null) {
+        _coupon.text = widget.product!.coupon!.couponCode ?? '';
+        _selectedCouponType = widget.product!.coupon!.couponType;
+        _couponTitleController.text = widget.product!.coupon!.title ?? '';
+
+        _couponDescriptionController.text = widget.product!.coupon!.description ?? '';
+        _couponDiscountController.text = widget.product!.coupon!.discount ?? '';
+        _couponValidFromController.text = widget.product!.coupon!.validFrom ?? '';
+        _couponValidToController.text = widget.product!.coupon!.validTo ?? '';
+      }
     }
   }
 
@@ -63,6 +81,12 @@ class _AddCatalogueState extends State<AddCatalogue> {
   void dispose() {
     _priceController.dispose();
     _descriptionController.dispose();
+    _coupon.dispose();
+    _couponTitleController.dispose();
+    _couponDescriptionController.dispose();
+    _couponDiscountController.dispose();
+    _couponValidFromController.dispose();
+    _couponValidToController.dispose();
     super.dispose();
   }
 
@@ -75,7 +99,6 @@ class _AddCatalogueState extends State<AddCatalogue> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SizedBox(
-        height: screenHeight * 0.7,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -91,13 +114,12 @@ class _AddCatalogueState extends State<AddCatalogue> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Obx(() => Container(
+                Container(
                   color: AppColors.whiteColor,
-                  child: DropdownButtonFormField<String>(
-                    dropdownColor: AppColors.whiteColor,
-                    value: _selectedCategory,
-                    hint: Text('Category'),
+                  child: TextFormField(
+                    controller: _selectedCategory,
                     decoration: InputDecoration(
+                      hintText: 'Category',
                       border: OutlineInputBorder(),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(5.0)),
@@ -115,52 +137,107 @@ class _AddCatalogueState extends State<AddCatalogue> {
                       ),
                       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    items: AuthController.to.categoryList.map<DropdownMenuItem<String>>((category) {
-                      return DropdownMenuItem<String>(
-                        value: category.catName,
-                        child: Text(category.catName),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      _selectedCategory = value;
-                    },
                   ),
-                )),
+                ),
+                const SizedBox(height: 8),  Container(
+                  color: AppColors.whiteColor,
+                  child: TextFormField(
+                    controller: _selectedSubCategory,
+                    decoration: InputDecoration(
+                      hintText: 'Sub Category',
+                      border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Container(
                   color: AppColors.whiteColor,
-                  child: DropdownButtonFormField<String>(
-                    dropdownColor: AppColors.whiteColor,
-                    value: _selectedColor,
-                    hint: Text('Color'),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                        borderSide: BorderSide(
-                          color: Colors.grey.withOpacity(0.3),
-                          width: 1.0,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                        borderSide: BorderSide(
-                          color: Colors.grey.withOpacity(0.3),
-                          width: 1.0,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    items: ['Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Purple', 'Pink', 'Brown', 'Black', 'White']
-                        .map((String color) {
-                      return DropdownMenuItem<String>(
-                        value: color,
-                        child: Text(color),
+                  child: GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Pick a color'),
+                            content: SingleChildScrollView(
+                              child: ColorPicker(
+                                pickerColor: _selectedColor != null
+                                    ? _parseColor(_selectedColor!)
+                                    : Colors.red,
+                                onColorChanged: (Color color) {
+                                  setState(() {
+                                    _selectedColor = colorToHex(color);
+                                  });
+                                },
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  FocusScope.of(context).unfocus();
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       );
-                    }).toList(),
-                    onChanged: (value) {
-                      _selectedColor = value;
                     },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedColor != null ? 'Color Selected' : 'Color',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          if (_selectedColor != null)
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: _parseColor(_selectedColor!),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.grey),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -252,9 +329,8 @@ class _AddCatalogueState extends State<AddCatalogue> {
                                   ],
                                 ),
                                 SizedBox(height: 4),
-                                DropdownButtonFormField<String>(
-                                  dropdownColor: AppColors.whiteColor,
-                                  value: _selectedQuantity,
+                                TextFormField(
+                                  controller: _selectedQuantity,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
                                     enabledBorder: OutlineInputBorder(
@@ -271,19 +347,8 @@ class _AddCatalogueState extends State<AddCatalogue> {
                                         width: 1.0,
                                       ),
                                     ),
-                                    labelStyle: TextStyle(color: AppColors.greyTextColor),
-                                    labelText: 'Enter Quantity',
                                   ),
-                                  items: ['5', '10', '15', '20'].map((String quantity) {
-                                    return DropdownMenuItem<String>(
-
-                                      value: quantity,
-                                      child: Text(quantity),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    _selectedQuantity = value;
-                                  },
+                                  keyboardType: TextInputType.number,
                                 ),
                               ],
                             ),
@@ -336,31 +401,347 @@ class _AddCatalogueState extends State<AddCatalogue> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      'Add Coupon',
+                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w400),
+                    ),
+                    Text(
+                      ' (Optional)',
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.greyTextColor.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  color: AppColors.whiteColor,
+                  child: TextFormField(
+                    controller: _coupon,
+                    maxLines: 1,
+                    onChanged: (value) {
+                      setState(() {
+                        _showCouponFields = value.isNotEmpty;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Coupon Code',
+                      border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_showCouponFields||_coupon.text.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    color: AppColors.whiteColor,
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCouponType,
+                      hint: Text('Select Coupon Type'),
+                      items: ['percentage', 'flat'].map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(type.toUpperCase()),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCouponType = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    color: AppColors.whiteColor,
+                    child: TextFormField(
+                      controller: _couponTitleController,
+                      decoration: InputDecoration(
+                        hintText: 'Coupon Title',
+                        border: OutlineInputBorder(),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    color: AppColors.whiteColor,
+                    child: TextFormField(
+                      controller: _couponDescriptionController,
+                      decoration: InputDecoration(
+                        hintText: 'Coupon Description',
+                        border: OutlineInputBorder(),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    color: AppColors.whiteColor,
+                    child: TextFormField(
+                      controller: _couponDiscountController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: 'Discount Value',
+                        border: OutlineInputBorder(),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.3),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          color: AppColors.whiteColor,
+                          child: TextFormField(
+                            controller: _couponValidFromController,
+                            readOnly: true,
+                            onTap: () async {
+                              DateTime? pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                              );
+                              if (pickedDate != null) {
+                                setState(() {
+                                  _couponValidFromController.text =
+                                      pickedDate.toIso8601String().split('T').first;
+                                  if (_couponValidToController.text.isNotEmpty) {
+                                    DateTime validToDate = DateTime.parse(_couponValidToController.text);
+                                    if (validToDate.isBefore(pickedDate)) {
+                                      _couponValidToController.clear();
+                                    }
+                                  }
+                                });
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Valid From',
+                              border: OutlineInputBorder(),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  width: 1.0,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  width: 1.0,
+                                ),
+                              ),
+                              suffixIcon: Icon(Icons.calendar_today),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          color: AppColors.whiteColor,
+                          child: TextFormField(
+                            controller: _couponValidToController,
+                            readOnly: true,
+                            onTap: () async {
+                              if (_couponValidFromController.text.isEmpty) {
+                                CommonToast.show(msg: "Please select Valid From date first");
+                                return;
+                              }
+
+                              DateTime fromDate = DateTime.parse(_couponValidFromController.text);
+                              DateTime? pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: fromDate.isAfter(DateTime.now()) ? fromDate : DateTime.now(),
+                                firstDate: fromDate,
+                                lastDate: DateTime(2100),
+                              );
+                              if (pickedDate != null) {
+                                setState(() {
+                                  _couponValidToController.text =
+                                      pickedDate.toIso8601String().split('T').first;
+                                });
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Valid To',
+                              border: OutlineInputBorder(),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  width: 1.0,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  width: 1.0,
+                                ),
+                              ),
+                              suffixIcon: Icon(Icons.calendar_today),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                SizedBox(height: 16),
+                Text(
+                  'Hsn Code',
+                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w400),
+                ),
+                SizedBox(height: 10,),
+                Container(
+                  color: AppColors.whiteColor,
+                  child: TextFormField(
+                    controller: _hsnCode,
+                    maxLines: 1,
+
+                    decoration: InputDecoration(
+                      hintText: 'Hsn Code',
+                      border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        borderSide: BorderSide(
+                          color: Colors.grey.withOpacity(0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Obx(() => CommonButton(
                   width: double.infinity,
                   height: Get.height * 0.045,
                   text: widget.product != null ? "Update" : "Post",
-                  isLoading: HomeController.to.isLoading.value,
+                  isLoading: widget.product != null ? HomeController.to.isProductEditLoading.value : HomeController.to.isProductAddLoading.value,
                   ontap: () {
+                    if (!_validateFields()) {
+                      return;
+                    }
+
+                    Map<String, dynamic>? couponData;
+                    if (_coupon.text.isNotEmpty) {
+                      couponData = {
+                        'title': _couponTitleController.text,
+                        'description': _couponDescriptionController.text,
+                        'coupon_code': _coupon.text,
+                        'coupon_type': _selectedCouponType,
+                        'discount': _couponDiscountController.text,
+                        'valid_from': _couponValidFromController.text,
+                        'valid_to': _couponValidToController.text,
+                      };
+                    }
+
                     if (widget.product != null) {
-                      // Edit product
                       HomeController.to.editProduct(
                         id: widget.product!.id.toString(),
-                        category: _selectedCategory ?? '',
+                        category: _selectedCategory.text,
+                        subCategory: _selectedSubCategory.text,
                         color: _selectedColor ?? '',
                         price: _priceController.text,
-                        quantity: _selectedQuantity ?? '',
+                        quantity: _selectedQuantity.text,
                         description: _descriptionController.text,
-                        existingImageUrls: _existingImageUrls, // Pass existing URLs
+                        existingImageUrls: _existingImageUrls,
+                        coupon: couponData ?? {},
+                        hsnCode: _hsnCode.text,
                       );
                     } else {
-                      // Add product
                       HomeController.to.product(
-                        category: _selectedCategory ?? '',
+                        category: _selectedCategory.text,
+                        subCategory: _selectedSubCategory.text,
                         color: _selectedColor ?? '',
                         price: _priceController.text,
-                        quantity: _selectedQuantity ?? '',
+                        quantity: _selectedQuantity.text,
                         description: _descriptionController.text,
+                        coupon: couponData ?? {},
+                        hsnCode: _hsnCode.text,
                       );
                     }
                   },
@@ -373,10 +754,21 @@ class _AddCatalogueState extends State<AddCatalogue> {
     );
   }
 
+  String colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+  }
+
+  Color _parseColor(String hexColor) {
+    hexColor = hexColor.replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return Color(int.parse(hexColor, radix: 16));
+  }
+
   Widget _buildImageUploadButton(BuildContext context, int index) {
     return Expanded(
       child: GestureDetector(
-
         onTap: () async {
           final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
           if (pickedFile != null) {
@@ -477,4 +869,80 @@ class _AddCatalogueState extends State<AddCatalogue> {
     );
   }
 
+  bool _validateFields() {
+    if (_selectedCategory.text.isEmpty) {
+      CommonToast.show(msg: "Please enter Category name");
+      return false;
+    }
+    if (_selectedSubCategory.text.isEmpty) {
+      CommonToast.show(msg: "Please enter Sub Category name");}
+
+    if (_selectedColor == null || _selectedColor!.isEmpty) {
+      CommonToast.show(msg: "Please select a Color");
+      return false;
+    }
+
+    if (_priceController.text.isEmpty) {
+      CommonToast.show(msg: "Please enter Price Per Meter");
+      return false;
+    }
+
+    final priceValue = double.tryParse(_priceController.text);
+    if (priceValue == null || priceValue <= 0) {
+      CommonToast.show(msg: "Please enter a valid Price");
+      return false;
+    }
+
+    if (_selectedQuantity.text.isEmpty) {
+      CommonToast.show(msg: "Please select Quantity");
+      return false;
+    }
+
+    if (widget.product == null) {
+      if (HomeController.to.selectedImages.isEmpty) {
+        CommonToast.show(msg: "Please upload at least one product image");
+        return false;
+      }
+    } else {
+      final hasExistingImages = _existingImageUrls.isNotEmpty;
+      final hasNewImages = HomeController.to.selectedImages.isNotEmpty;
+      if (!hasExistingImages && !hasNewImages) {
+        CommonToast.show(msg: "Please upload at least one product image");
+        return false;
+      }
+    }
+
+    if (_coupon.text.isNotEmpty) {
+      if (_selectedCouponType == null) {
+        CommonToast.show(msg: "Please select coupon type");
+        return false;
+      }
+      if (_couponTitleController.text.isEmpty) {
+        CommonToast.show(msg: "Please enter coupon title");
+        return false;
+      }
+      if (_couponDescriptionController.text.isEmpty) {
+        CommonToast.show(msg: "Please enter coupon description");
+        return false;
+      }
+      if (_couponDiscountController.text.isEmpty) {
+        CommonToast.show(msg: "Please enter discount value");
+        return false;
+      }
+      if (_couponValidFromController.text.isEmpty) {
+        CommonToast.show(msg: "Please select valid from date");
+        return false;
+      }
+      if (_couponValidToController.text.isEmpty) {
+        CommonToast.show(msg: "Please select valid to date");
+        return false;
+      }
+    }
+    if(_hsnCode.text.isEmpty) {
+      CommonToast.show(msg: "Please enter Hsn Code");
+      return false;
+    }
+
+    return true;
+  }
 }

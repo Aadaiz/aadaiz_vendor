@@ -5,7 +5,6 @@ import '../config/app_config.dart';
 class Api {
   ///Registration
   static const fcm = "${AppConfig.baseUrl}fcm_update";
-
   static const signUp = "${AppConfig.baseUrl}mv_send_otp";
   static const verifyOtp = "${AppConfig.baseUrl}mv_verify_otp";
   static const kycSeller = "${AppConfig.baseUrl}seller/kyc";
@@ -39,11 +38,18 @@ class Api {
   static const selleraddress = "${AppConfig.baseUrl}seller/address";
   static const tailoraddress = "${AppConfig.baseUrl}tailor/address";
   static const support = "${AppConfig.baseUrl}seller/support_tickets";
-  static const payment = "${AppConfig.baseUrl}seller/payment_details";
+  static const payment = "${AppConfig.baseUrl}seller/paymentHistory";
+  static const notificationList = "${AppConfig.baseUrl}seller/notification";
   static const order = "${AppConfig.baseUrl}seller/sell";
   static const profiledetail = "${AppConfig.baseUrl}seller/profile";
   static const updateProfile = "${AppConfig.baseUrl}seller/updateProfile";
   static const sellerdash = "${AppConfig.baseUrl}seller/dashboard";
   static const orderList = "${AppConfig.baseUrl}seller/order_list";
+  static const trackingData = "${AppConfig.baseUrl}shiprocket/track";
   static const updateorderstatus = "${AppConfig.baseUrl}seller/updateOrderStatus";
+  static const countries = "${AppConfig.baseUrl}countries";
+  static const state = "${AppConfig.baseUrl}states";
+  static const city = "${AppConfig.baseUrl}cities";
+  static const checkKycStatus = "${AppConfig.baseUrl}seller/kycDetails";
+
 }

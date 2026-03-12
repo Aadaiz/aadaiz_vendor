@@ -1,9 +1,10 @@
+
 import 'dart:convert';
 
 class SellerOrderRes {
   bool? status;
   Data? data;
-  String? message;
+  dynamic? message;
 
   SellerOrderRes({
     this.status,
@@ -11,17 +12,17 @@ class SellerOrderRes {
     this.message,
   });
 
-  factory SellerOrderRes.fromRawJson(String str) => SellerOrderRes.fromJson(json.decode(str));
+  factory SellerOrderRes.fromRawJson(dynamic str) => SellerOrderRes.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  dynamic toRawJson() => json.encode(toJson());
 
-  factory SellerOrderRes.fromJson(Map<String, dynamic> json) => SellerOrderRes(
+  factory SellerOrderRes.fromJson(Map<dynamic, dynamic> json) => SellerOrderRes(
     status: json["status"],
     data: json["data"] == null ? null : Data.fromJson(json["data"]),
     message: json["message"],
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<dynamic, dynamic> toJson() => {
     "status": status,
     "data": data?.toJson(),
     "message": message,
@@ -29,19 +30,19 @@ class SellerOrderRes {
 }
 
 class Data {
-  int? currentPage;
+  dynamic? currentPage;
   List<Datum>? data;
-  String? firstPageUrl;
-  int? from;
-  int? lastPage;
-  String? lastPageUrl;
+  dynamic? firstPageUrl;
+  dynamic? from;
+  dynamic? lastPage;
+  dynamic? lastPageUrl;
   List<Link>? links;
   dynamic nextPageUrl;
-  String? path;
-  int? perPage;
+  dynamic? path;
+  dynamic? perPage;
   dynamic prevPageUrl;
-  int? to;
-  int? total;
+  dynamic? to;
+  dynamic? total;
 
   Data({
     this.currentPage,
@@ -59,11 +60,11 @@ class Data {
     this.total,
   });
 
-  factory Data.fromRawJson(String str) => Data.fromJson(json.decode(str));
+  factory Data.fromRawJson(dynamic str) => Data.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  dynamic toRawJson() => json.encode(toJson());
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory Data.fromJson(Map<dynamic, dynamic> json) => Data(
     currentPage: json["current_page"],
     data: json["data"] == null ? [] : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
     firstPageUrl: json["first_page_url"],
@@ -79,7 +80,7 @@ class Data {
     total: json["total"],
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<dynamic, dynamic> toJson() => {
     "current_page": currentPage,
     "data": data == null ? [] : List<dynamic>.from(data!.map((x) => x.toJson())),
     "first_page_url": firstPageUrl,
@@ -97,36 +98,61 @@ class Data {
 }
 
 class Datum {
-  int? id;
-  int? orderId;
-  int? patternId;
-  int? sellerId;
+  dynamic? id;
+  dynamic? userId; // NEW
+  dynamic? orderId;
+  dynamic patternId;
+  dynamic? materialId;
+  dynamic? sellerId;
   dynamic tailorId;
-  String? price;
-  dynamic quantity;
-  String? fabricMetre;
+
+  dynamic? price;
+  dynamic? quantity;
+
+  dynamic? discount; // NEW
+  dynamic? tax; // NEW
+  dynamic? deliveryCharge; // NEW
+  dynamic? total; // NEW
+
+  dynamic fabricMetre;
   dynamic size;
-  String? measurement;
-  String? cancelStatus;
-  String? cancelHours;
-  String? orderStatus;
+  dynamic measurement;
+
+  dynamic cancelStatus;
+  dynamic cancelHours;
+
+  dynamic orderStatus;
   dynamic materialStatus;
   dynamic trackingStatus;
+
   dynamic receivedImage;
   dynamic completedImage;
+
+  dynamic shiprocketOrderId; // NEW
+  dynamic shiprocketShipmentId; // NEW
+  dynamic awbCode; // NEW
+  dynamic courierName; // NEW
+
   DateTime? createdAt;
   DateTime? updatedAt;
-  String? orderDate;
-  Products? products;
+
+  Order? order;
+  Product? product;
 
   Datum({
     this.id,
+    this.userId,
     this.orderId,
     this.patternId,
+    this.materialId,
     this.sellerId,
     this.tailorId,
     this.price,
     this.quantity,
+    this.discount,
+    this.tax,
+    this.deliveryCharge,
+    this.total,
     this.fabricMetre,
     this.size,
     this.measurement,
@@ -137,24 +163,30 @@ class Datum {
     this.trackingStatus,
     this.receivedImage,
     this.completedImage,
+    this.shiprocketOrderId,
+    this.shiprocketShipmentId,
+    this.awbCode,
+    this.courierName,
     this.createdAt,
     this.updatedAt,
-    this.orderDate,
-    this.products,
+    this.order,
+    this.product,
   });
 
-  factory Datum.fromRawJson(String str) => Datum.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
-
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory Datum.fromJson(Map<dynamic, dynamic> json) => Datum(
     id: json["id"],
+    userId: json["user_id"], // NEW
     orderId: json["order_id"],
     patternId: json["pattern_id"],
+    materialId: json["material_id"],
     sellerId: json["seller_id"],
     tailorId: json["tailor_id"],
     price: json["price"],
     quantity: json["quantity"],
+    discount: json["discount"], // NEW
+    tax: json["tax"], // NEW
+    deliveryCharge: json["delivery_charge"], // NEW
+    total: json["total"], // NEW
     fabricMetre: json["fabric_metre"],
     size: json["size"],
     measurement: json["measurement"],
@@ -165,20 +197,35 @@ class Datum {
     trackingStatus: json["tracking_status"],
     receivedImage: json["received_image"],
     completedImage: json["completed_image"],
-    createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
-    updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
-    orderDate: json["order_date"],
-    products: json["products"] == null ? null : Products.fromJson(json["products"]),
+    shiprocketOrderId: json["shiprocket_order_id"], // NEW
+    shiprocketShipmentId: json["shiprocket_shipment_id"], // NEW
+    awbCode: json["awb_code"], // NEW
+    courierName: json["courier_name"], // NEW
+    createdAt: json["created_at"] == null
+        ? null
+        : DateTime.parse(json["created_at"]),
+    updatedAt: json["updated_at"] == null
+        ? null
+        : DateTime.parse(json["updated_at"]),
+    order: json["order"] == null ? null : Order.fromJson(json["order"]),
+    product:
+    json["product"] == null ? null : Product.fromJson(json["product"]),
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<dynamic, dynamic> toJson() => {
     "id": id,
+    "user_id": userId,
     "order_id": orderId,
     "pattern_id": patternId,
+    "material_id": materialId,
     "seller_id": sellerId,
     "tailor_id": tailorId,
     "price": price,
     "quantity": quantity,
+    "discount": discount,
+    "tax": tax,
+    "delivery_charge": deliveryCharge,
+    "total": total,
     "fabric_metre": fabricMetre,
     "size": size,
     "measurement": measurement,
@@ -189,56 +236,192 @@ class Datum {
     "tracking_status": trackingStatus,
     "received_image": receivedImage,
     "completed_image": completedImage,
+    "shiprocket_order_id": shiprocketOrderId,
+    "shiprocket_shipment_id": shiprocketShipmentId,
+    "awb_code": awbCode,
+    "courier_name": courierName,
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
-    "order_date": orderDate,
-    "products": products?.toJson(),
+    "order": order?.toJson(),
+    "product": product?.toJson(),
   };
 }
 
-class Products {
-  int? id;
-  String? title;
-  String? category;
-  String? image;
-  String? price;
-  String? color;
+class Order {
+  dynamic? id;
+  dynamic? userId;
+  dynamic? address;
+  dynamic? status;
+  dynamic orderId;
+  dynamic tailorId;
+  dynamic? sellerId;
+  dynamic total;
+  dynamic gstPercentage;
+  dynamic shipingCharge;
+  dynamic shipOrderId;
+  dynamic shipmentId;
+  dynamic? cancelStatus;
+  dynamic? cancelHours;
+  dynamic paymentType;
+  dynamic paymentToken;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
-  Products({
+  Order({
     this.id,
-    this.title,
-    this.category,
-    this.image,
-    this.price,
-    this.color,
+    this.userId,
+    this.address,
+    this.status,
+    this.orderId,
+    this.tailorId,
+    this.sellerId,
+    this.total,
+    this.gstPercentage,
+    this.shipingCharge,
+    this.shipOrderId,
+    this.shipmentId,
+    this.cancelStatus,
+    this.cancelHours,
+    this.paymentType,
+    this.paymentToken,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  factory Products.fromRawJson(String str) => Products.fromJson(json.decode(str));
+  factory Order.fromRawJson(dynamic str) => Order.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  dynamic toRawJson() => json.encode(toJson());
 
-  factory Products.fromJson(Map<String, dynamic> json) => Products(
+  factory Order.fromJson(Map<dynamic, dynamic> json) => Order(
     id: json["id"],
-    title: json["title"],
-    category: json["category"],
-    image: json["image"],
-    price: json["price"],
-    color: json["color"],
+    userId: json["user_id"],
+    address: json["address"],
+    status: json["status"],
+    orderId: json["order_id"],
+    tailorId: json["tailor_id"],
+    sellerId: json["seller_id"],
+    total: json["total"],
+    gstPercentage: json["gst_percentage"],
+    shipingCharge: json["shiping_charge"],
+    shipOrderId: json["ship_order_id"],
+    shipmentId: json["shipment_id"],
+    cancelStatus: json["cancel_status"],
+    cancelHours: json["cancel_hours"],
+    paymentType: json["payment_type"],
+    paymentToken: json["payment_token"],
+    createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+    updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<dynamic, dynamic> toJson() => {
     "id": id,
+    "user_id": userId,
+    "address": address,
+    "status": status,
+    "order_id": orderId,
+    "tailor_id": tailorId,
+    "seller_id": sellerId,
+    "total": total,
+    "gst_percentage": gstPercentage,
+    "shiping_charge": shipingCharge,
+    "ship_order_id": shipOrderId,
+    "shipment_id": shipmentId,
+    "cancel_status": cancelStatus,
+    "cancel_hours": cancelHours,
+    "payment_type": paymentType,
+    "payment_token": paymentToken,
+    "created_at": createdAt?.toIso8601String(),
+    "updated_at": updatedAt?.toIso8601String(),
+  };
+}
+
+class Product {
+  dynamic? id;
+  dynamic? sellerId;
+  dynamic? title;
+  dynamic? subtitle;
+  dynamic? category;
+  dynamic? image;
+  dynamic? color;
+  dynamic? price;
+  dynamic? aadaizPrice;
+  dynamic? meter;
+  dynamic? description;
+  dynamic rating;
+  dynamic? status;
+  dynamic peopleView;
+  dynamic? stockStatus;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+
+  Product({
+    this.id,
+    this.sellerId,
+    this.title,
+    this.subtitle,
+    this.category,
+    this.image,
+    this.color,
+    this.price,
+    this.aadaizPrice,
+    this.meter,
+    this.description,
+    this.rating,
+    this.status,
+    this.peopleView,
+    this.stockStatus,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Product.fromRawJson(dynamic str) => Product.fromJson(json.decode(str));
+
+  dynamic toRawJson() => json.encode(toJson());
+
+  factory Product.fromJson(Map<dynamic, dynamic> json) => Product(
+    id: json["id"],
+    sellerId: json["seller_id"],
+    title: json["title"],
+    subtitle: json["subtitle"],
+    category: json["category"],
+    image: json["image"],
+    color: json["color"],
+    price: json["price"],
+    aadaizPrice: json["aadaiz_price"],
+    meter: json["meter"],
+    description: json["description"],
+    rating: json["rating"],
+    status: json["status"],
+    peopleView: json["people_view"],
+    stockStatus: json["stock_status"],
+    createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+    updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+  );
+
+  Map<dynamic, dynamic> toJson() => {
+    "id": id,
+    "seller_id": sellerId,
     "title": title,
+    "subtitle": subtitle,
     "category": category,
     "image": image,
-    "price": price,
     "color": color,
+    "price": price,
+    "aadaiz_price": aadaizPrice,
+    "meter": meter,
+    "description": description,
+    "rating": rating,
+    "status": status,
+    "people_view": peopleView,
+    "stock_status": stockStatus,
+    "created_at": createdAt?.toIso8601String(),
+    "updated_at": updatedAt?.toIso8601String(),
   };
 }
 
 class Link {
-  String? url;
-  String? label;
+  dynamic? url;
+  dynamic? label;
   bool? active;
 
   Link({
@@ -247,17 +430,17 @@ class Link {
     this.active,
   });
 
-  factory Link.fromRawJson(String str) => Link.fromJson(json.decode(str));
+  factory Link.fromRawJson(dynamic str) => Link.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  dynamic toRawJson() => json.encode(toJson());
 
-  factory Link.fromJson(Map<String, dynamic> json) => Link(
+  factory Link.fromJson(Map<dynamic, dynamic> json) => Link(
     url: json["url"],
     label: json["label"],
     active: json["active"],
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<dynamic, dynamic> toJson() => {
     "url": url,
     "label": label,
     "active": active,

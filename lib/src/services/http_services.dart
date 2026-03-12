@@ -28,7 +28,7 @@ class HttpHelper {
     dynamic responseJson;
     try {
       final response = await http.post(Uri.parse(url), body: body, headers: hd);
-      log("Api URL:$url body: $body response:${response.body}");
+      log("Api URL:$url body:\n $body\n response:${response.body}");
       responseJson = _returnResponse(response);
     } on SocketException {
       throw FetchDataException('No Internet Connection', 500);

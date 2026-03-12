@@ -15,7 +15,7 @@ class Bank extends StatefulWidget {
 
 class _BankState extends State<Bank> {
 
-
+final FocusNode _nameFocus = FocusNode();
   final FocusNode _accountFocus = FocusNode();
   final FocusNode _confirmAccountNumberFocus = FocusNode();
   final FocusNode _ifscCodeFocus = FocusNode();
@@ -24,6 +24,7 @@ class _BankState extends State<Bank> {
   void dispose() {
 
     super.dispose();
+    _nameFocus.dispose();
     _accountFocus.dispose();
     _confirmAccountNumberFocus.dispose();
     _ifscCodeFocus.dispose();
@@ -38,6 +39,63 @@ class _BankState extends State<Bank> {
 
     return Column(
       children: <Widget>[
+        OverlayWidgets.fullWidthTextField(
+          label: RichText(
+            text: TextSpan(
+              text: 'Bank Name',
+              style: GoogleFonts.inter(color: AppColors.blackColor),
+              children: <InlineSpan>[
+                TextSpan(
+                  text: ' *',
+                  style: GoogleFonts.inter(color: AppColors.starColor),
+                ),
+              ],
+            ),
+          ),
+          child: SizedBox(
+            height: screenHeight * 0.05,
+            child: TextFormField(
+              focusNode: _nameFocus,
+              controller: AuthController.to.bankName,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.next,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Bank Name',
+                hintStyle: GoogleFonts.inter(
+                  color: AppColors.hintTextColor,
+                  fontSize: 12.sp,
+                ),
+                fillColor: AppColors.whiteColor,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: AppColors.textFieldBorderColor,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: AppColors.textFieldBorderColor,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: AppColors.textFieldBorderColor,
+                  ),
+                ),
+              ),
+              onFieldSubmitted: (String val) => Utils.fieldFocusChange(
+                context: context,
+                currentFocus: _nameFocus,
+                nextFocus: _confirmAccountNumberFocus,
+              ),
+            ),
+          ),
+        ),
         OverlayWidgets.fullWidthTextField(
             label: RichText(
                 text: TextSpan(
@@ -180,7 +238,7 @@ class _BankState extends State<Bank> {
                 child: TextFormField(
                     focusNode: _ifscCodeFocus,
                     controller: AuthController.to.ifscCode,
-                    keyboardType: TextInputType.number,
+
                     textInputAction: TextInputAction.done,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(

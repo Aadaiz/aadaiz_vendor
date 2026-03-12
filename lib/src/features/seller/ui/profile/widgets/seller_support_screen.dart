@@ -21,20 +21,23 @@ class _SellerSupportScreenState extends State<SellerSupportScreen> {
   List<String> titleList = ['All', 'Pending', 'Closed'];
   int _index = 0;
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
-
+  final ProfileController _controller = Get.find<ProfileController>();
   @override
   void initState() {
     super.initState();
-    ProfileController.to.getSupportList();
+    // WidgetsBinding.instance.addPostFrameCallback((_){
+    //   _controller.getSupportList();
+    // });
+
   }
 
   void _onRefresh() async {
-    await ProfileController.to.getSupportList( isRefresh: true);
+    await _controller.getSupportList( isRefresh: true);
     _refreshController.refreshCompleted();
   }
 
   void _onLoading() async {
-    await ProfileController.to.getSupportList( isLoadMore: true);
+    await _controller.getSupportList( isLoadMore: true);
     _refreshController.loadComplete();
   }
 
@@ -92,7 +95,7 @@ class _SellerSupportScreenState extends State<SellerSupportScreen> {
                   onTap: () {
                     setState(() {
                       _index = index;
-                      ProfileController.to.getSupportList( isRefresh: true);
+                      _controller.getSupportList( isRefresh: true);
                     });
                     _refreshController.requestRefresh();
                   },
@@ -132,20 +135,20 @@ class _SellerSupportScreenState extends State<SellerSupportScreen> {
           SizedBox(height: 15),
           Expanded(
             child: Obx(
-                  () => ProfileController.to.isLoading.value && ProfileController.to.supportList.isEmpty
+                  () => _controller.isLoading.value && _controller.supportList.isEmpty
                   ? Utils.carshimmer(lenght: 5)
-                  : ProfileController.to.supportList.isEmpty
+                  : _controller.supportList.isEmpty
                   ? Center(child: Text("No Data"))
                   : SmartRefresher(
                 controller: _refreshController,
                 enablePullDown: true,
-                enablePullUp: ProfileController.to.hasMore.value,
+                enablePullUp: _controller.hasMore.value,
                 onRefresh: _onRefresh,
                 onLoading: _onLoading,
                 child: ListView.builder(
-                  itemCount: ProfileController.to.supportList.length,
+                  itemCount: _controller.supportList.length,
                   itemBuilder: (context, index) {
-                    final data = ProfileController.to.supportList[index];
+                    final data = _controller.supportList[index];
                     return Column(
                       children: [
                         SupportCart(data: data),

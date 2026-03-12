@@ -12,6 +12,7 @@ class AppColors{
   static const Color starColor = Color(0xFFF71C1C);
   static const Color ddStarColor = Color(0xFFF92929);
   static const Color greyTextColor = Color(0xFF7C7C7C);
+  static  Color greyColor = Colors.grey.shade50;
   static const Color inkColor = Color(0xFF0C1855);
   static const Color blackTextColor = Color(0xFF171716);
   static const Color brown = Color(0xFF871111);

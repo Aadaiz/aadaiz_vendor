@@ -15,6 +15,8 @@ import 'package:aadaiz_seller/src/res/colors/app_colors.dart';
 import 'package:aadaiz_seller/src/res/components/loading_button.dart';
 import 'package:aadaiz_seller/src/utils/utils.dart';
 
+import '../../seller/ui/profile/controller/location_controller.dart';
+
 class Kyc extends StatefulWidget {
   const Kyc({super.key});
 
@@ -37,7 +39,7 @@ class _KycState extends State<Kyc> {
     super.initState();
     AuthController.to.kycIndex.value=0;
   }
-
+  final LocationController locationController = LocationController.to;
   @override
   Widget build(BuildContext context) {
     final double screenHeight = Utils.getActivityScreenHeight(context);
@@ -57,11 +59,16 @@ class _KycState extends State<Kyc> {
                     child: SvgPicture.asset('assets/images/back.svg'))),
             centerTitle: true,
             forceMaterialTransparency: true,
-            title: Text('KYC',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.blackColor,
-                    fontSize: 20.sp))),
+            title: InkWell(
+              onTap: (){
+                AuthController.to.logOut();
+              },
+              child: Text('KYC',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.blackColor,
+                      fontSize: 20.sp)),
+            )),
         body: SingleChildScrollView(
             child: Obx(
           () => Column(children: <Widget>[
@@ -199,14 +206,31 @@ class _KycState extends State<Kyc> {
                 title: 'Next',
                 onPressed: () {
                   final index = AuthController.to.kycIndex.value;
-                 if (index == 0) {
+                  if (index == 0) {
                     if (AuthController.to.gstNumber.text.trim().isEmpty) {
                       CommonToast.show(msg: 'Please enter GST Number');
+                      return;
+                    }
 
+
+                    final gstNumber = AuthController.to.gstNumber.text.trim();
+                    final cleanGST = gstNumber.replaceAll(RegExp(r'\s+'), '').toUpperCase();
+
+
+                    final gstRegex = RegExp(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$');
+
+                    if (!gstRegex.hasMatch(cleanGST)) {
+                      CommonToast.show(msg: 'Invalid GST Number format');
+                      return;
+                    }
+
+
+                    final stateCode = int.tryParse(cleanGST.substring(0, 2));
+                    if (stateCode == null || stateCode < 1 || stateCode > 37) {
+                      CommonToast.show(msg: 'Invalid State Code in GST');
                       return;
                     }
                   }
-
 
                   else if (index == 1) {
                     if (AuthController.to.aadhaarImage.value.path.isEmpty) {
@@ -246,26 +270,45 @@ class _KycState extends State<Kyc> {
 
                  }
                  else if (index == 3) {
-                   if (AuthController.to.street.text.trim().isEmpty) {
-                     CommonToast.show(msg:"Please enter street name");
+                   if (locationController.selectedCountry.value== null  ) {
+                     CommonToast.show(msg:"Please choose Country");
+                     return;
+                   }
+                   if (locationController.selectedState.value== null  ) {
+                     CommonToast.show(msg:"Please choose state");
+                     return;
+                   }
+                   if (locationController.selectedCity.value== null ) {
+                     CommonToast.show(msg:"Please Choose city name");
+                     return;
+                   }
+                   String street = AuthController.to.street.text.trim();
+
+                   if (street.isEmpty) {
+                     CommonToast.show(msg: "Please enter street details");
+                     return;
+                   }
+
+                   if (street.length < 100) {
+                     CommonToast.show(msg: "Street address must be at least 100 characters");
+                     return;
+                   }
+
+                   if (!RegExp(r'\d').hasMatch(street)) {
+                     CommonToast.show(msg: "Street must contain door number and street name");
                      return;
                    }
                    if (AuthController.to.pinCode.text.trim().isEmpty) {
                      CommonToast.show(msg:"Please enter pincode address");
                      return;
                    }
-                   if (AuthController.to.city.text.trim().isEmpty ) {
-                     CommonToast.show(msg:"Please enter city name");
-                     return;
-                   }
+
                    if (AuthController.to.landMark.text.trim().isEmpty ) {
                      CommonToast.show(msg:"Please enter Landmark name");
                      return;
                    }
-                   if (AuthController.to.state.text.trim().isEmpty ) {
-                     CommonToast.show(msg:"Please choose state");
-                     return;
-                   }
+
+
 
 
 
@@ -275,6 +318,10 @@ class _KycState extends State<Kyc> {
 
 
                   if (index == 4) {
+                    if(AuthController.to.bankName.text.trim().isEmpty) {
+                      CommonToast.show(msg:"Please enter Bank Name");
+                      return;
+                    }
                     if (AuthController.to.accountNumber.text.trim().isEmpty) {
                       CommonToast.show(msg:"Please enter Account number");
                       return;

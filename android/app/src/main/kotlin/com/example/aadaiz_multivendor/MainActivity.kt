@@ -1,4 +1,4 @@
-package com.example.aadaiz_multivendor
+package com.aadaiz.aadaiz_multivendor
 
 import io.flutter.embedding.android.FlutterActivity
 

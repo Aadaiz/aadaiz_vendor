@@ -1,6 +1,9 @@
+import 'package:aadaiz_seller/src/features/auth/kyc_status_screen.dart';
+import 'package:aadaiz_seller/src/features/seller/ui/home/notification_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -69,7 +72,9 @@ class _HomeState extends State<Home> {
         ),
         centerTitle: false,
         actions: <Widget>[
-          SvgPicture.asset('assets/images/notification.svg'),
+          InkWell(onTap: (){
+            Get.to(()=>NotificationListScreen());
+          }, child: SvgPicture.asset('assets/images/notification.svg')),
           Utils.rowSpacer(width: screenWidth * 0.05),
         ],
       ),

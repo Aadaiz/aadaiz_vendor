@@ -5,13 +5,14 @@ import 'package:aadaiz_seller/src/features/seller/ui/profile/model/profile_detai
 import 'package:flutter/material.dart';
 import 'package:aadaiz_seller/src/features/seller/ui/profile/repository/profile_repository.dart';
 import 'package:get/get.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../res/components/common_toast.dart';
 import '../../../../auth/controller/auth_controller.dart';
 import '../../home/controller/home_controller.dart';
 import '../model/payment_model.dart';
 import '../model/profile_model.dart' as address;
-import '../model/support_model.dart'as support;
+import '../model/support_model.dart' as support;
 
 class ProfileController extends GetxController {
   @override
@@ -19,7 +20,10 @@ class ProfileController extends GetxController {
     // TODO: implement onInit
     super.onInit();
     getprofiledetail();
+    getSupportList(isRefresh: true);
+    getPaymentList(isRefresh: true);
   }
+
   var isLoading = false.obs;
   var isLoadingupdate = false.obs;
   var addresslist = <address.Datum>[].obs;
@@ -44,13 +48,13 @@ class ProfileController extends GetxController {
   final TextEditingController shopname = TextEditingController();
 
   final ProfileRepository repo = ProfileRepository();
-  static ProfileController get to => Get.put(ProfileController(), permanent: true);
+  static ProfileController get to => Get.find<ProfileController>();
+
   Future<void> createsupport() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      print("Error: Token is null");
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       isLoading(false);
       return;
     }
@@ -66,16 +70,18 @@ class ProfileController extends GetxController {
     try {
       await AuthController.to.uploadImage();
     } catch (e) {
-      print("Error uploading image: $e");
-      Get.snackbar("Error", "Failed to upload image. Please try again.");
+      log("Error uploading image: $e");
       isLoading(false);
       return;
     }
 
     // Validate uploaded image
     if (AuthController.to.upload.isEmpty) {
-      print("Error: No image uploaded");
-      Get.snackbar("Error", "No image was uploaded. Please select an image and try again.");
+      log("Error: No image uploaded");
+      Get.snackbar(
+        "Error",
+        "No image was uploaded. Please select an image and try again.",
+      );
       isLoading(false);
       return;
     }
@@ -91,9 +97,8 @@ class ProfileController extends GetxController {
     try {
       isLoading(true);
       var response = await repo.createsupportApi(body: jsonEncode(body));
-      if (response.success==true) {
-
-CommonToast.show(msg: response.message);
+      if (response.success == true) {
+        CommonToast.show(msg: response.message);
         await Future.delayed(const Duration(seconds: 2));
         Get.back();
         problem.clear();
@@ -104,54 +109,57 @@ CommonToast.show(msg: response.message);
 
         getSupportList(isRefresh: true); // Refresh support list
       } else {
-        Get.snackbar("Error", response.message ?? "Failed to create support ticket.");
+        Get.snackbar(
+          "Error",
+          response.message ?? "Failed to create support ticket.",
+        );
       }
     } catch (e, stackTrace) {
-      print("Error creating support ticket: $e");
+      log("Error creating support ticket: $e");
       log("Stack trace: $stackTrace");
-      Get.snackbar("Error", "An error occurred while creating the support ticket.");
+
     } finally {
       isLoading(false);
     }
   }
-  Future<void> getaddresslist(String? type,String? module) async {
+
+  Future<void> getaddresslist(String? type, String? module) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      print("Error: Token is null");
-      Get.snackbar("Error", "No token found. Please log in again.");
+      log("Error: Token is null");
+
       isLoading(false);
       return;
     }
-    Map<String, dynamic> body = {
-      "action": type,
-      "token": token,
-    };
+    Map<String, dynamic> body = {"action": type, "token": token};
     try {
       isLoading(true);
-      var response = await repo.addressApi(body: jsonEncode(body),module:module);
+      var response = await repo.addressApi(
+        body: jsonEncode(body),
+        module: module,
+      );
       if (response.data != null && response.data!.isNotEmpty) {
         if (type == "list") {
           addresslist.clear();
           addresslist.addAll(response.data!);
         }
       } else {
-        Get.snackbar("Info", "No addresses found.");
+
       }
     } catch (e, stackTrace) {
-      print("Error fetching address list: $e");
+      log("Error fetching address list: $e");
       log("Stack trace: $stackTrace");
     } finally {
       isLoading(false);
     }
   }
 
-
   Future<void> saveAddress(dynamic id, dynamic role) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
@@ -176,19 +184,22 @@ CommonToast.show(msg: response.message);
       if (response.success == true) {
         CommonToast.show(msg: response.message);
         Get.back();
-        getaddresslist("list",'');
+        getaddresslist("list", '');
       } else {
         Get.snackbar("Error", "Failed to save address.");
       }
     } catch (e) {
-      print("Error saving address: $e");
-      Get.snackbar("Error", "An error occurred while saving the address.");
+      log("Error saving address: $e");
+
     } finally {
       isLoading(false);
     }
   }
 
-  Future<void> getSupportList({bool isRefresh = false, bool isLoadMore = false}) async {
+  Future<void> getSupportList({
+    bool isRefresh = false,
+    bool isLoadMore = false,
+  }) async {
     if (isRefresh) {
       currentPage.value = 1;
       supportList.clear();
@@ -201,10 +212,9 @@ CommonToast.show(msg: response.message);
       currentPage.value++;
     }
 
-
     try {
       isLoading(true);
-      var res = await repo.SupportListApi(page: currentPage.value, );
+      var res = await repo.SupportListApi(page: currentPage.value);
       if (res.data != null && res.data!.data != null) {
         if (isRefresh || !isLoadMore) {
           supportList.clear();
@@ -220,79 +230,113 @@ CommonToast.show(msg: response.message);
       isLoading(false);
     }
   }
-  var paymentlist = <Datum>[].obs;
+
+
   var profiledetail = <Data>[].obs;
-Future<void>getpaymentlist()async{
-  try{
-    isLoading(true);
-  MyPaymentRes res = await repo.getpaymentlistApi();
+  var paymentList = <Datum>[].obs;
 
-  if(res.data!=null){
-    paymentlist.assignAll(res.data!);
+  final RefreshController refreshPayment = RefreshController(
+    initialRefresh: false,
+  );
 
-  }}catch(e){
+  int currentPagePayment = 1;
+  int lastPage = 1;
+  Future<void> getPaymentList({bool isRefresh = false}) async {
+    try {
+      if (isRefresh) {
+        currentPagePayment = 1;
+      }
 
-  }finally{
-    isLoading(false);
+      if (currentPagePayment == 1) {
+        isLoading(true);
+      }
+
+      MyPaymentRes res = await repo.getPaymentListApi(page: currentPagePayment);
+
+      if (res.data != null) {
+        if (currentPagePayment == 1) {
+          paymentList.assignAll(res.data!);
+        } else {
+          paymentList.addAll(res.data!);
+        }
+      }
+
+      lastPage = res.pagination?.lastPage ?? 1;
+
+      if (currentPagePayment >= lastPage) {
+        refreshPayment.loadNoData();
+      } else {
+        refreshPayment.loadComplete();
+        currentPagePayment++;
+      }
+
+    } catch (e) {
+      refreshPayment.loadFailed();
+    } finally {
+      isLoading(false);
+      refreshPayment.refreshCompleted();
+      update();
+    }
   }
-}
-Future<void>getprofiledetail()async{
-  try{
-    isLoading(true);
-  ProfileRes res = await repo.getprofiledetailApi();
 
-  if(res.data!=null){
-    profiledetail.assignAll([res.data!]);
+  Future<void> getprofiledetail() async {
+    try {
+      isLoading(true);
+      ProfileRes res = await repo.getprofiledetailApi();
 
-  }}catch(e){
-
-  }finally{
-    isLoading(false);
+      if (res.data != null) {
+        profiledetail.assignAll([res.data!]);
+        tempImage.value=null;
+      }
+    } catch (e) {
+    } finally {
+      isLoading(false);
+    }
   }
-}
-  Future<dynamic> UpdateProfile(
 
-  ) async {
+  Future<dynamic> UpdateProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
-      return;
+            return;
     }
 
     try {
       isLoadingupdate(true);
-      List<String> uploadedUrls = await HomeController.to.uploadImage(); // Upload images first
+      List<String> uploadedUrls = await HomeController.to
+          .uploadImage();
       String imageUrls = uploadedUrls.join(',');
 
-
       Map<String, dynamic> body = {
-        "token":token ,
-       "shop_name":shopname.text,
-        "shop_photo":imageUrls
+        "token": token,
+        "shop_name": shopname.text,
+        "shop_photo": imageUrls,
+        'bank_name': AuthController.to.bankName.text,
+        'account_number': AuthController.to.accountNumber.text,
+        'confirm_account_number': AuthController.to.confirmAccountNumber.text,
+        'ifsc_code': AuthController.to.ifscCode.text
+
       };
 
       var response = await repo.updateprofileApi(body: jsonEncode(body));
       if (response['status'] == true) {
-        CommonToast.show(msg: response['message'] ?? "Profile Updated successfully");
+        CommonToast.show(
+          msg: response['message'] ?? "Profile Updated successfully",
+        );
 
         Future.delayed(const Duration(milliseconds: 500), () {
-         getprofiledetail()
-;        });
+          getprofiledetail();
+        });
 
-    enable=false;
-
-
-      } else {
-
-      }
+        enable = false;
+      } else {}
     } catch (e) {
-      print("Error saving order: $e");
-
+      log("Error saving order: $e");
     } finally {
       isLoadingupdate(false);
     }
   }
+
   @override
   void onClose() {
     fullNameController.dispose();

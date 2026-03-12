@@ -181,18 +181,18 @@ bool isCategory= false;
                   height: screenHeight * 0.05,
                   child: TextFormField(
                       onTap: (){
-                        setState(() {
-                          isCategory =!isCategory;
-                        });
+                        // setState(() {
+                        //   isCategory =!isCategory;
+                        // });
                       },
-                      readOnly: true,
+                      readOnly: false,
                       focusNode: _productNameFocus,
                       controller:  AuthController.to.category,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
-                        suffixIcon: const Icon(Icons.keyboard_arrow_down,size: 25,color: AppColors.primaryColor,),
+                        // suffixIcon: const Icon(Icons.keyboard_arrow_down,size: 25,color: AppColors.primaryColor,),
                           hintText: 'Category',
                           hintStyle: GoogleFonts.inter(
                               color: AppColors.hintTextColor,
@@ -268,73 +268,73 @@ bool isCategory= false;
         Utils.columnSpacer(
             height: screenHeight * 0.01
         ),
-        OverlayWidgets.fullWidthTextField(
-          isHeight: true,
-            label: RichText(
-                text: TextSpan(
-                    text: 'Can’t Find Category ? ',
-                    style: GoogleFonts.inter(
-                        color: AppColors.blackColor
-                    ),
-                    children: <InlineSpan>[
-                      TextSpan(
-                          text: 'Write Here',
-                          style: GoogleFonts.inter(
-                              color: AppColors.inkColor
-                          )
-                      )
-                    ]
-                )
-            ),
-            child: SizedBox(
-                height: screenHeight * 0.08,
-                child: TextFormField(
-                  maxLines: null,
-                    textAlignVertical: TextAlignVertical.top,
-                    focusNode: _categoryFocus,
-                    controller:  AuthController.to.otherProduct,
-                    expands: true,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.next,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                        isDense: true,
-                        hintText: 'Write Product Name',
-                        hintStyle: GoogleFonts.inter(
-                            color: AppColors.hintTextColor,
-                            fontSize: 12.sp
-                        ),
-                        fillColor: AppColors.whiteColor,
-                        filled: true,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                                color: AppColors.textFieldBorderColor
-                            )
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                                color: AppColors.textFieldBorderColor
-                            )
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                                color: AppColors.textFieldBorderColor
-                            )
-                        )
-                    ),
-                    onFieldSubmitted: (String val) => Utils.fieldFocusChange(
-                        context: context,
-                        currentFocus: _categoryFocus,
-                        nextFocus: _shopDDFocus
-                    )
-                )
-            )
-        ),
+        // OverlayWidgets.fullWidthTextField(
+        //   isHeight: true,
+        //     label: RichText(
+        //         text: TextSpan(
+        //             text: 'Can’t Find Category ? ',
+        //             style: GoogleFonts.inter(
+        //                 color: AppColors.blackColor
+        //             ),
+        //             children: <InlineSpan>[
+        //               TextSpan(
+        //                   text: 'Write Here',
+        //                   style: GoogleFonts.inter(
+        //                       color: AppColors.inkColor
+        //                   )
+        //               )
+        //             ]
+        //         )
+        //     ),
+        //     child: SizedBox(
+        //         height: screenHeight * 0.08,
+        //         child: TextFormField(
+        //           maxLines: null,
+        //             textAlignVertical: TextAlignVertical.top,
+        //             focusNode: _categoryFocus,
+        //             controller:  AuthController.to.otherProduct,
+        //             expands: true,
+        //             keyboardType: TextInputType.multiline,
+        //             textInputAction: TextInputAction.next,
+        //             textCapitalization: TextCapitalization.words,
+        //             decoration: InputDecoration(
+        //                 isDense: true,
+        //                 hintText: 'Write Product Name',
+        //                 hintStyle: GoogleFonts.inter(
+        //                     color: AppColors.hintTextColor,
+        //                     fontSize: 12.sp
+        //                 ),
+        //                 fillColor: AppColors.whiteColor,
+        //                 filled: true,
+        //                 border: OutlineInputBorder(
+        //                     borderRadius: BorderRadius.circular(8),
+        //                     borderSide: const BorderSide(
+        //                         color: AppColors.textFieldBorderColor
+        //                     )
+        //                 ),
+        //                 enabledBorder: OutlineInputBorder(
+        //                     borderRadius: BorderRadius.circular(8),
+        //                     borderSide: const BorderSide(
+        //                         color: AppColors.textFieldBorderColor
+        //                     )
+        //                 ),
+        //                 focusedBorder: OutlineInputBorder(
+        //                     borderRadius: BorderRadius.circular(8),
+        //                     borderSide: const BorderSide(
+        //                         color: AppColors.textFieldBorderColor
+        //                     )
+        //                 )
+        //             ),
+        //             onFieldSubmitted: (String val) => Utils.fieldFocusChange(
+        //                 context: context,
+        //                 currentFocus: _categoryFocus,
+        //                 nextFocus: _shopDDFocus
+        //             )
+        //         )
+        //     )
+        // ),
         Utils.columnSpacer(
-            height: screenHeight * 0.03
+            height: screenHeight * 0.01
         ),
         Padding(
           padding: const EdgeInsets.only(

@@ -1,39 +1,36 @@
+import 'dart:developer';
+
 import 'package:aadaiz_seller/src/features/seller/ui/dashboard/model/sellerdash_model.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 import '../repository/sellerdash_repository.dart';
 
+class SellerDashController extends GetxController {
+  static SellerDashController get to => Get.put(SellerDashController(), permanent: true);
 
-
-class SellerdashController extends GetxController{
-
-
-  static SellerdashController get to => Get.put(SellerdashController(),permanent: true);
   @override
   void onInit() {
-    // TODO: implement onInit
     super.onInit();
-    Getdashdata();
+    getDashData(filter: 'this_week');
   }
+
   var isLoading = false.obs;
-  var dashdata = Data().obs;
-  var selectedPeriod = 'Last Week'.obs;
+  var dashData = SellerDashRes().obs;
+  var selectedPeriod = 'This Week'.obs;
+  final DashRepository repo = DashRepository();
 
-  final dashRepository repo = dashRepository();
-  Getdashdata()async{
-    try{
+  getDashData({String filter = 'this_week'}) async {
+    try {
       isLoading(true);
-    var response = await repo.SellerdashApi();
-    if(response.status==true){
-      dashdata.value=response.data!;
-    }}catch(e){
-
-    }finally{
+      var response = await repo.sellerDashApi(filter);
+      if (response.status == true) {
+        dashData.value = response;
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
       isLoading(false);
     }
   }
-
-
-
 }

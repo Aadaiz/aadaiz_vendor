@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -13,39 +11,42 @@ import '../model/otp_verify_model.dart';
 import '../model/seller_kyc_model.dart';
 import '../model/signup_model.dart';
 
-class AuthRepository{
+class AuthRepository {
   static final HttpHelper _http = HttpHelper();
 
-  Future<dynamic> signUp({required dynamic body}) async{
-    var response =await _http.post(Api.signUp, body,contentType: true);
+  Future<dynamic> signUp({required dynamic body}) async {
+    var response = await _http.post(Api.signUp, body, contentType: true);
     SignUpRes res = SignUpRes.fromMap(jsonDecode(response));
     return res;
   }
-  Future<dynamic> verifyOtp({required dynamic body}) async{
-    var response =await _http.post(Api.verifyOtp, body,contentType: true);
+
+  Future<dynamic> verifyOtp({required dynamic body}) async {
+    var response = await _http.post(Api.verifyOtp, body, contentType: true);
     OtpVerifyRes res = OtpVerifyRes.fromMap(jsonDecode(response));
     return res;
   }
 
-  Future<dynamic> kyc({required dynamic body}) async{
-
-    var response =await _http.post(Api.kycSeller, body,contentType: true);
+  Future<dynamic> kyc({required dynamic body}) async {
+    var response = await _http.post(Api.kycSeller, body, contentType: true);
     SellerKycRes res = SellerKycRes.fromMap(jsonDecode(response));
     return res;
   }
 
-  Future<dynamic> getCategory() async{
+  Future<dynamic> checkKycStatus({required dynamic token}) async {
+    var res = await _http.get("${Api.checkKycStatus}?token=$token");
+
+    return jsonDecode(res);
+  }
+
+  Future<dynamic> getCategory() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
-    var response =await _http.get(Api.category);
+    var response = await _http.get(Api.category);
     CategoryListRes res = CategoryListRes.fromMap(jsonDecode(response));
     return res;
   }
 
-
-
-  Future uploadImage({image}) async
-  {
+  Future uploadImage({image}) async {
     String fileNames = '';
     if (image != '') {
       fileNames = image.toString().split('/').last;
@@ -62,15 +63,13 @@ class AuthRepository{
           // ),
         ),
       });
-      for (var field in formData.fields) {
-      }
+      for (var field in formData.fields) {}
 
       Response response = await dio.post(
-          Api.uploadImage,
-          data: formData,
-          options: Options(headers: {
-            "Accept": "application/json",
-          }));
+        Api.uploadImage,
+        data: formData,
+        options: Options(headers: {"Accept": "application/json"}),
+      );
       // body: data,
       // headers: {
       //   "Accept": "application/json",
@@ -80,7 +79,7 @@ class AuthRepository{
       // var jsonresponse = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return  AddImage.fromJson(response.data);
+        return AddImage.fromJson(response.data);
       } else {
         return null;
       }
@@ -98,5 +97,4 @@ class AuthRepository{
       }
     }
   }
-
 }

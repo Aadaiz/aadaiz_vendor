@@ -52,7 +52,7 @@ class UnauthorisedException extends AppException {
 
     // userPref.token.val=null;
    // Get.to(()=>LoginPage());
-    Get.snackbar("Error", message);
+
     // SnackBarCommon.showSnack("Error", message);
   }
 }

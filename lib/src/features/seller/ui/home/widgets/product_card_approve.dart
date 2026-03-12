@@ -58,53 +58,58 @@ class _CommonCardWidgetState extends State<CommonCardWidget> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16.0),
-                        child: SizedBox(
+                Container(
+                width: screenWidth * 0.2,
+                height: screenWidth * 0.2,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  border: Border.all(
+                    color:AppColors.greyTextColor.withAlpha(50),
+                    width: 1,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14.0),
+                  child: cs.CarouselSlider(
+                    options: cs.CarouselOptions(
+                      height: screenWidth * 0.2,
+                      viewportFraction: 1.0,
+                      autoPlay: true,
+                      autoPlayInterval: const Duration(seconds: 3),
+                      enlargeCenterPage: false,
+                    ),
+                    items: imageUrls.map((imageUrl) {
+                      return CachedNetworkImage(
+                        width: screenWidth * 0.2,
+                        height: screenWidth * 0.2,
+                        fit: BoxFit.cover,
+                        imageUrl: imageUrl,
+                        errorWidget: (context, url, error) => Image.asset(
+                          'assets/images/mat.png',
                           width: screenWidth * 0.2,
                           height: screenWidth * 0.2,
-                          child: cs.CarouselSlider(
-                            options: cs.CarouselOptions(
-                              height: screenWidth * 0.2,
-                              viewportFraction: 1.0,
-                              autoPlay: true,
-                              autoPlayInterval: const Duration(seconds: 3),
-                              enlargeCenterPage: false,
+                          fit: BoxFit.fill,
+                        ),
+                        progressIndicatorBuilder: (context, url, progress) => Container(
+                          width: screenWidth * 0.2,
+                          height: screenWidth * 0.2,
+                          color: Colors.black,
+                          child: Center(
+                            child: Transform.scale(
+                              scale: 0.5,
+                              child: CircularProgressIndicator(
+                                color: Colors.grey,
+                                strokeWidth: 2,
+                                value: progress.progress,
+                              ),
                             ),
-                            items: imageUrls.map((imageUrl) {
-                              return CachedNetworkImage(
-                                width: screenWidth * 0.2,
-                                height: screenWidth * 0.2,
-                                fit: BoxFit.cover,
-                                imageUrl: imageUrl,
-                                errorWidget: (context, url, error) =>
-                                    Image.asset(
-                                      'assets/images/mat.png',
-                                      width: screenWidth * 0.2,
-                                      height: screenWidth * 0.2,
-                                      fit: BoxFit.fill,
-                                    ),
-                                progressIndicatorBuilder:
-                                    (context, url, progress) => Container(
-                                  width: screenWidth * 0.2,
-                                  height: screenWidth * 0.2,
-                                  color: Colors.black,
-                                  child: Center(
-                                    child: Transform.scale(
-                                      scale: 0.5,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.grey,
-                                        strokeWidth: 2,
-                                        value: progress.progress,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
                           ),
                         ),
-                      ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(

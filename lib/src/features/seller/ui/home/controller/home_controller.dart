@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:aadaiz_seller/src/features/seller/ui/home/model/tracking_model.dart' as tracking;
 import 'package:aadaiz_seller/src/features/seller/ui/home/model/home_model.dart'
     show Product;
-import 'package:aadaiz_seller/src/features/seller/ui/home/model/SellerOrder_model.dart'
-    show Datum;
+import '../model/SellerOrder_model.dart' hide Product;
 import 'package:aadaiz_seller/src/res/components/common_toast.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../model/notification_model.dart' as notification;
 import '../repository/home_repository.dart';
 
 class HomeController extends GetxController {
@@ -26,6 +27,8 @@ class HomeController extends GetxController {
     // TODO: implement onInit
     super.onInit();
     getproductlist();
+    getNotificationList(isRefresh: true);
+
   }
 
   var selectedImages = <XFile>[].obs;
@@ -37,6 +40,12 @@ class HomeController extends GetxController {
   var isLoadingStatusById = <dynamic, dynamic>{}.obs;
   var productlist = <Product>[].obs;
   var orderlist = <Datum>[].obs;
+  var isProductAddLoading = false.obs;
+  var isProductListLoading = false.obs;
+  var isProductDeleteLoading = false.obs;
+  var isProductEditLoading = false.obs;
+  var isStockUpdateLoading = false.obs;
+  var isOrderListLoading = false.obs;
 
   Future<List<String>> uploadImage() async {
     print('Starting image upload. Selected images: ${selectedImages.length}');
@@ -71,7 +80,7 @@ class HomeController extends GetxController {
         }
       } catch (e) {
         print('Error uploading image ${i + 1}: $e');
-        Get.snackbar("Error", "Failed to upload image ${i + 1}: $e");
+
         return [];
       } finally {
         kycLoading(false);
@@ -138,24 +147,25 @@ class HomeController extends GetxController {
 
   Future<dynamic> product({
     required String category,
+    required String subCategory,
     required String color,
     required String price,
     required String quantity,
     required String description,
-  }) async {
+    required dynamic coupon,required String hsnCode }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
     try {
-      isLoading(true);
-      List<String> uploadedUrls = await uploadImage(); // Upload images first
+     isProductAddLoading.value=true;
+      List<String> uploadedUrls = await uploadImage();
       String imageUrls = uploadedUrls.join(',');
       if (imageUrls.isEmpty) {
-        Get.snackbar("Error", "Please upload at least one image.");
+
         return;
       }
 
@@ -163,11 +173,15 @@ class HomeController extends GetxController {
         "action": "create",
         "token": token,
         "category": category,
+        "subtitle": subCategory,
         "image": imageUrls,
         "color": color,
         "price": price,
         "meter": quantity,
         "description": description,
+        "coupon": coupon,
+        'hsn_code': hsnCode,
+
       };
 
       var response = await repo.productaddApi(body: jsonEncode(body));
@@ -175,18 +189,19 @@ class HomeController extends GetxController {
         CommonToast.show(
           msg: response['message'] ?? "Product posted successfully",
         );
-        Get.back();
 
-        selectedImages.clear(); // Clear images after success
-        await getproductlist();
+        await getproductlist(isRefresh: true);
+
+        selectedImages.clear();
+        Get.back();
       } else {
-        Get.snackbar("Error", response.message ?? "Failed to save order.");
+
       }
     } catch (e) {
       print("Error saving order: $e");
-      Get.snackbar("Error", "An error occurred while saving the order: $e");
+
     } finally {
-      isLoading(false);
+      isProductAddLoading(false);
     }
   }
 
@@ -201,12 +216,12 @@ class HomeController extends GetxController {
     bool isRefresh = false,
     bool isLoadMore = false,
   }) async {
-    if (isLoading.value) return;
+    isLoading.value=true ;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       refreshController.refreshFailed();
       return;
     }
@@ -280,7 +295,7 @@ class HomeController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
@@ -298,20 +313,15 @@ class HomeController extends GetxController {
         CommonToast.show(
           msg: response.message ?? "Stock status updated successfully",
         );
-        // Refresh product list to reflect changes
-        await getproductlist();
+        Future.delayed(const Duration(milliseconds: 500), () {
+          getproductlist(isRefresh: true);
+        });
       } else {
-        Get.snackbar(
-          "Error",
-          response.message ?? "Failed to update stock status.",
-        );
+
       }
     } catch (e) {
       print("Error updating stock status: $e");
-      Get.snackbar(
-        "Error",
-        "An error occurred while updating stock status: $e",
-      );
+
     } finally {
       isLoading(false);
     }
@@ -321,7 +331,7 @@ class HomeController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
@@ -339,7 +349,7 @@ class HomeController extends GetxController {
           msg: response["message"] ?? "Product deleted successfully",
         );
         print('deleteProduct: Calling getproductlist to refresh');
-        Future.delayed(const Duration(seconds: 1), () {
+        Future.delayed(const Duration(milliseconds: 500), () {
           getproductlist(isRefresh: true);
         });
       } else {
@@ -347,7 +357,6 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       print("Error deleting product: $e");
-      Get.snackbar("Error", "An error occurred while deleting product: $e");
     } finally {
       isLoading(false);
     }
@@ -356,22 +365,25 @@ class HomeController extends GetxController {
   Future<void> editProduct({
     required String id,
     required String category,
+    required String subCategory,
     required String color,
     required String price,
     required String quantity,
     required String description,
+    required dynamic coupon,
+    required String hsnCode,
     List<String> existingImageUrls =
         const [], // Existing URLs for unchanged images
   }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
     try {
-      isLoading(true);
+      isProductEditLoading(true);
       // Upload only new images
       List<String> newImageUrls = selectedImages.isNotEmpty
           ? await uploadImage()
@@ -401,11 +413,15 @@ class HomeController extends GetxController {
         "token": token,
         "id": id,
         "category": category,
+        "subtitle": subCategory,
         "image": imageUrls,
         "color": color,
         "price": price,
         "meter": quantity,
         "description": description,
+        "coupon": coupon,
+        'hsn_code': hsnCode,
+
       };
 
       var response = await repo.productaddApi(body: jsonEncode(body));
@@ -418,10 +434,9 @@ class HomeController extends GetxController {
         Get.snackbar("Error", response.message ?? "Failed to update product.");
       }
     } catch (e) {
-      print("Error updating product: $e");
-      Get.snackbar("Error", "An error occurred while updating product: $e");
+
     } finally {
-      isLoading(false);
+      isProductEditLoading(false);
     }
   }
 
@@ -445,12 +460,12 @@ class HomeController extends GetxController {
     bool isLoadMore = false,
     String? type,
   }) async {
-    if (isLoading.value) return;
-print("typ : ${type}");
+    isLoading.value=true;
+    print("typ : ${type}");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       _getRefreshController(type).refreshFailed();
       return;
     }
@@ -465,16 +480,16 @@ print("typ : ${type}");
 
     try {
       isLoading(true);
-      var response = await repo.orderApi(type, token, currentPage.value);
-      if (response.status && response.data != null) {
+      SellerOrderRes response = await repo.orderApi(type, token, currentPage.value);
+      if (response.status==true&& response.data != null) {
         if (isRefresh) {
-          orderlist.assignAll(response.data.data);
+          orderlist.assignAll(response.data!.data!);
         } else {
-          orderlist.addAll(response.data.data);
+          orderlist.addAll(response.data!.data!);
         }
-        currentPage.value = response.data.currentPage;
-        lastPage.value = response.data.lastPage;
-        nextPageUrl.value = response.data.nextPageUrl ?? '';
+        currentPage.value = response.data!.currentPage!;
+        lastPage.value = response.data!.lastPage!;
+        nextPageUrl.value = response.data!.nextPageUrl ?? '';
         if (isRefresh) {
           _getRefreshController(type).refreshCompleted();
         } else if (isLoadMore) {
@@ -525,7 +540,7 @@ print("typ : ${type}");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
     if (token == null) {
-      Get.snackbar("Error", "No token found. Please log in again.");
+
       return;
     }
 
@@ -542,11 +557,12 @@ print("typ : ${type}");
 
       var response = await repo.orderstatusApi(body: jsonEncode(body));
       if (response["status"] == true) {
-        CommonToast.show(msg: response["message"]);
         Future.delayed(
-          Duration(milliseconds: 100),
-          () => {
-            getorderlist(isRefresh: true,
+            Duration(milliseconds: 100),
+                () => {
+        CommonToast.show(msg: response["message"]),
+            getorderlist(
+              isRefresh: true,
               type: type == 0
                   ? "placed"
                   : type == 1
@@ -563,13 +579,13 @@ print("typ : ${type}");
         Get.snackbar("Error", response.message ?? "Failed to update product.");
       }
     } catch (e) {
-      print("Error updating product: $e");
-      Get.snackbar("Error", "An error occurred while updating product: $e");
+
     } finally {
       isLoadingStatusById[id] = false; // Clear loading for this order ID
       isLoadingStatusById.refresh();
     }
   }
+
   @override
   void onClose() {
     print("HomeController onClose: Disposing RefreshControllers");
@@ -580,5 +596,91 @@ print("typ : ${type}");
     refreshControllerforTrack.dispose();
     refreshControllerforCompleted.dispose();
     super.onClose();
+  }
+var trackingLoading=false.obs;
+  var trackingData=<tracking.Data>[].obs;
+  var trackingDeliveryAddress = Rx<tracking.DeliveryAddress?>(null);
+  getTrackingData(String? trackId)async{
+    try{
+      trackingLoading(true);
+      final res = await repo.getTrackingData( trackId);
+      if(res.status==true){
+        trackingData.assignAll([res.data!]);
+        trackingDeliveryAddress.value = res.deliveryAddress;
+      }else{
+      }
+
+
+    }
+    finally{
+      trackingLoading(false);
+
+    }
+
+
+  }
+  var notificationList = <notification.Datum>[].obs;
+
+  final RefreshController refreshNotification = RefreshController(
+    initialRefresh: false,
+  );
+
+  int currentPageNotification = 1;
+  int lastPageNotification = 1;
+  Future<void> getNotificationList({bool isRefresh = false}) async {
+    try {
+      if (isRefresh) {
+        currentPageNotification = 1;
+      }
+
+      if (currentPageNotification == 1) {
+        isLoading(true);
+      }
+
+      notification.NotificationRes res = await repo.getNotificationListApi(page: currentPageNotification);
+
+
+
+      if (res.data != null && res.data!.data != null && res.data!.data!.isNotEmpty) {
+
+        if (currentPageNotification == 1) {
+          notificationList.assignAll(res.data!.data!);
+        } else {
+          notificationList.addAll(res.data!.data!);
+        }
+
+      } else {
+
+        notificationList.assignAll([
+          notification.Datum(
+            message: "Heloooooooo",
+            title: "New",
+            createdAt: DateTime.now(),
+          ),
+          notification.Datum(
+            message: "Test Notification",
+            title: "Offer",
+            createdAt: DateTime.now(),
+          ),
+        ]);
+      }
+
+
+      lastPageNotification = res.data!.lastPage ?? 1;
+
+      if (currentPageNotification >= lastPageNotification) {
+        refreshNotification.loadNoData();
+      } else {
+        refreshNotification.loadComplete();
+        currentPageNotification++;
+      }
+
+    } catch (e) {
+      refreshNotification.loadFailed();
+    } finally {
+      isLoading(false);
+      refreshNotification.refreshCompleted();
+      update();
+    }
   }
 }

@@ -4,26 +4,32 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aadaiz_seller/src/features/seller/ui/profile/widgets/payment_history_card.dart';
+import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-import '../../../../../res/colors/app_colors.dart';
+import '../../../../res/colors/app_colors.dart';
+import 'controller/home_controller.dart';
 
-class PaymentHistoryScreen extends StatefulWidget {
-  const PaymentHistoryScreen({super.key});
+
+
+class NotificationListScreen extends StatefulWidget {
+
+
+  const NotificationListScreen({super.key});
 
   @override
-  State<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+  State<NotificationListScreen> createState() => _NotificationListScreenState();
 }
 
-class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
-  final ProfileController _controller = Get.find<ProfileController>();
+class _NotificationListScreenState extends State<NotificationListScreen> {
+  final HomeController _controller = Get.find<HomeController>();
 
   @override
   void initState() {
     super.initState();
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _controller.getPaymentList(isRefresh: true);
+       //_controller.getNotificationList(isRefresh: true);
     // });
   }
 
@@ -50,7 +56,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
         ),
         centerTitle: true,
         title: Text(
-          'Payment History',
+          'Notification',
           style: GoogleFonts.dmSans(
             fontWeight: FontWeight.w400,
             color: AppColors.blackColor,
@@ -61,21 +67,21 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
       body: SmartRefresher(
         enablePullDown: true,
         enablePullUp: true,
-        controller: _controller.refreshPayment,
+        controller: _controller.refreshNotification,
 
         onRefresh: () {
-          _controller.getPaymentList(isRefresh: true);
+          _controller.getNotificationList(isRefresh: true);
         },
 
         onLoading: () {
-          _controller.getPaymentList();
+          _controller.getNotificationList();
         },
 
-        child: GetBuilder<ProfileController>(
+        child: GetBuilder<HomeController>(
           builder: (controller) {
             if (controller.isLoading.value) {
               return Utils.carshimmer(lenght: 5);
-            } else if (controller.paymentList.isEmpty) {
+            } else if (controller.notificationList.isEmpty) {
               return const Center(child: Text("No Data"));
             } else {
               return Column(
@@ -83,9 +89,9 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                   const SizedBox(height: 15),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: controller.paymentList.length,
+                      itemCount: controller.notificationList.length,
                       itemBuilder: (context, index) {
-                        final data = controller.paymentList[index];
+                        final data = controller.notificationList[index];
                         return Column(
                           children: [
                             Padding(
@@ -94,11 +100,12 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                                 vertical: 8,
                               ),
                               child:CommonHistoryItem(
-                                title: data.transactionId ?? '',
-                                date: "${data.day}, ${data.date} ${data.time}",
-                                amount: "₹${data.amount ?? ''}",
-                                icon: Icons.payment,
-                              ),
+                                title: data.title ?? '',
+                                message: data.message ?? '',
+                                date: DateFormat('dd/MM/yyyy').format(DateTime.parse(data.createdAt.toString())),
+                                icon: Icons.notifications,
+                                isNotification: true,
+                              )
                             ),
                           ],
                         );

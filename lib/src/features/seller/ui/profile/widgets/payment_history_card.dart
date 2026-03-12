@@ -3,46 +3,52 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aadaiz_seller/src/res/colors/app_colors.dart';
 
-class PaymentHistoryItem extends StatelessWidget {
+class CommonHistoryItem extends StatelessWidget {
   final String title;
+  final String? message;
   final String date;
-  final String amount;
-  final String imageUrl;
+  final String? amount;
+  final IconData icon;
+  final Color? amountColor;
+  final bool? isNotification;
 
-  const PaymentHistoryItem({super.key, 
+
+  const CommonHistoryItem({
+    super.key,
     required this.title,
+    this.message,
     required this.date,
-    required this.amount,
-    required this.imageUrl,
+    this.amount,
+    this.icon = Icons.notifications,
+    this.amountColor,
+    this.isNotification = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8,horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
-        boxShadow: const <BoxShadow>[
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 2.0,
-            spreadRadius: 0.5
+            blurRadius: 2,
+            spreadRadius: 0.5,
           ),
         ],
       ),
       child: Row(
         children: [
-          CachedNetworkImage(
-            imageUrl: imageUrl,
-            imageBuilder: (context, imageProvider) => CircleAvatar(
-              backgroundImage: imageProvider,
-              radius: 24.0,
-            ),
-            placeholder: (context, url) => const CircularProgressIndicator(),
-            errorWidget: (context, url, error) => const Icon(Icons.error),
+          CircleAvatar(
+            radius: 24,
+            child: Icon(icon),
           ),
-          const SizedBox(width: 12.0),
+
+          const SizedBox(width: 12),
+
+          /// Title + Message
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,20 +56,37 @@ class PaymentHistoryItem extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.dmSans(
-                    fontSize: 16.0,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4.0),
+
+                if (message != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    message!,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 4),
+if(isNotification==false)
                 Row(
                   children: [
-                    Icon(Icons.calendar_month,size: 15,
-                    color: AppColors.greyTextColor.withOpacity(0.5),),
-                    const SizedBox(width: 4,),
+                    Icon(
+                      Icons.calendar_month,
+                      size: 14,
+                      color: AppColors.greyTextColor.withOpacity(0.5),
+                    ),
+                    const SizedBox(width: 4),
+
                     Text(
                       date,
                       style: GoogleFonts.dmSans(
-                        fontSize: 10.0,
+                        fontSize: 11,
                         color: Colors.grey,
                       ),
                     ),
@@ -72,14 +95,25 @@ class PaymentHistoryItem extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            amount,
-            style: GoogleFonts.aBeeZee(
-              fontSize: 14.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
+
+          /// Amount OR Date (Right Side)
+          if (amount != null)
+            Text(
+              amount!,
+              style: GoogleFonts.aBeeZee(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: amountColor ?? Colors.green,
+              ),
+            )
+          else
+            Text(
+              date,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
             ),
-          ),
         ],
       ),
     );
